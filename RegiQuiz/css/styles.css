@@ -1,0 +1,17 @@
+body {
+    background-color: #000000;
+}
+
+h1 {
+    color: #9929EA;
+}
+
+.btn-primary {
+    background-color: #CC66DA;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #FAEB92;
+}
+

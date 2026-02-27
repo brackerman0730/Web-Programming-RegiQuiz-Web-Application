@@ -1,17 +1,24 @@
 body {
-    background-color: #000000;
+    background-color: #F3E9DC;
 }
 
 h1 {
-    color: #9929EA;
+    color: #000000;
 }
 
+p {
+  color: #000000;  
+}
+
+h3 {
+    color: #000000;
+}
 .btn-primary {
-    background-color: #CC66DA;
+    background-color: #D96F32;
     border: none;
 }
 
 .btn-primary:hover {
-    background-color: #FAEB92;
+    background-color: #C75D2C;
 }
 

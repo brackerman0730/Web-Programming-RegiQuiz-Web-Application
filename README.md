@@ -1,3 +1,10 @@
+
+ChangeLog for Assignment #3
+- Made a static server for the web application
+- Added data.json that has a list of flashcard sets
+- Most recent setlist will list all of the flash cards stored in data.json if the user presses show more
+
+
 ChangeLog for Assignment #2 
 - Made the welcome page look nicer by changing the color scheme like asked too and using cards to format everything
 - Added a JS Dom and an About us card to go with it. 

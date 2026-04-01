@@ -1,3 +1,12 @@
+ChangeLog for Assignment #4
+-Added a DAO controller and adjusted the DAO and server files to fit with it
+-Added front end integration with this new system
+  -There is now a my sets page that has all the users created sets (the same sets that also shows in most recent setlist but with more data)
+    -Each set can be edited or deleted
+      -A new edit set page that is the same as the createset page but will start off with the information that was already there
+-Tests for the DAO
+
+
 
 ChangeLog for Assignment #3
 - Made a static server for the web application

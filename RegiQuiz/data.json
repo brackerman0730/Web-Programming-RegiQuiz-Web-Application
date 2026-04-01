@@ -53,7 +53,15 @@
     "category": "History",
     "description": "His life and influence"
   },
-  {"_id": 10,
+  {
+    "_id": 10,
+    "name": "Long name: WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    "category": "Computer Science",
+    "description": "Long description: WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+  },
+
+  {
+    "_id": 11,
     "name": "Physics Formulas",
     "category": "Science",
     "description": "All formulas before 3/20"

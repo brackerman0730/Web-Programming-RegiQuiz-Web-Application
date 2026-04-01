@@ -1,4 +1,4 @@
-const dao = require("./dao/setsDao");
+const controller = require("./controllers/setsController");
 
 let hostname = "localhost";
 let port = 3000;
@@ -15,29 +15,11 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get("/sets", function(req, res) {
-    res.status(200);
-    res.send(dao.readAll());
-    res.end();
-});
-
-
-app.get("/sets/:sid", function(req, res) {
-
-    let sid = parseInt(req.params.sid);
-
-    let set = dao.read(sid);
-
-    if (set != null) {
-        res.status(200);
-        res.send(set);
-    } else {
-        res.status(404);
-        res.send({ msg: "Set with this ID does not exist" });
-    }
-
-    res.end();
-});
+app.get('/sets', controller.getAll);
+app.get('/sets/:sid', controller.get);
+app.post('/sets', controller.postCreateUpdate);
+app.get('/deleteset/:sid', controller.getDelete);
+app.post('/updateset/', controller.postCreateUpdate);
 
 
 const server = app.listen(port, hostname, function() {

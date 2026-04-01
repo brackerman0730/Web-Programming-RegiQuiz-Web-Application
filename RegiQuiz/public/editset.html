@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Edit Set - RegiQuiz</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+        <div class="container-fluid">
+          <!-- Links -->
+              <ul class="navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="index.html">Welcome Page</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="mysets.html">My Sets</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="createset.html">Create Set</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#">Profile</a>
+                </li>
+              </ul>
+            </div>
+          
+          </nav>
+    <!-- Form Section -->
+     <div class="container mt-5">
+        <div class="row justify-content-center">
+           <div class="col-12 col-md-6">
+              <div class="card p-4 shadow">
+                <h2 class="text-center mb-4">
+                  Edit Flashcard Set
+                </h2>
+
+                <form action="/updateset" method="post">
+                  <input type="hidden" name="txt_id" id="txt_id">
+                    <!-- Set Name -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                          Set Name
+                        </label>
+                        <input type="text" name="txt_name" id="txt_name" class="form-control" required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                          Description
+                        </label>
+                        <textarea name="txt_description" id="txt_description" class="form-control"></textarea>
+                    </div>
+
+                    <!-- Category Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                          Category
+                        </label>
+                        <select name="txt_category" id="txt_category" class="form-select" required>
+                            <option value="Other">
+                              Other
+                            </option>
+                            <option value="Computer Science">
+                              Computer Science
+                            </option>
+                            <option value="Mathematics">
+                              Mathematics
+                            </option>
+                            <option value="Science">
+                              Science
+                            </option>
+                            <option value="Language">
+                              Language
+                            </option>
+                            <option value="English">
+                              English
+                            </option>
+                            <option value="History">
+                              History
+                            </option>
+                            <option value="Engineering">
+                              Engineering
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Save Changes
+                        </button>
+                    </div>
+
+                </form>
+              </div>
+            </div>
+          
+        </div>
+    </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function getSetIdFromUrl(){
+    let params = new URLSearchParams(window.location.search);
+    return params.get("id");
+  }
+
+  async function loadSetData(){
+    let sid = getSetIdFromUrl();
+
+    let response = await fetch('/sets/' + sid);
+    let set = await response.json();
+
+    document.getElementById("txt_id").value = set._id;
+    document.getElementById("txt_name").value = set.name;
+    document.getElementById("txt_description").value = set.description;
+    document.getElementById("txt_category").value = set.category;
+  }
+
+  loadSetData();
+</script>
+</body>
+</html>
+

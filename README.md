@@ -1,3 +1,11 @@
+ChangeLog for Assignment #5
+- Added support for MongoDB/Mongoose (changes in server.js, added app.js, new dao, edited controller, .env, DbConnection.js)
+- Set IDs for mongoose work differently so to keep coninuity I kept the ID field in "My sets" the same even though the IDS are now messy and long
+- Tests for the new Mongoose Dao
+
+
+
+
 ChangeLog for Assignment #4
 -Added a DAO controller and adjusted the DAO and server files to fit with it
 -Added front end integration with this new system

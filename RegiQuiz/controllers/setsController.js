@@ -1,15 +1,15 @@
-const dao = require('../dao/setsDao');
+const dao = require('../dao/SetsDaoMongoose');
 
-exports.getAll = function(req, res) {
+exports.getAll = async function(req, res) {
     res.status(200);
-    res.send(dao.readAll());
+    res.send( await dao.readAll() );
     res.end();
 };
 
-exports.get = function(req, res) {
-    let sid = parseInt(req.params.sid);
+exports.get = async function(req, res) {
+    let sid = req.params.sid;
 
-    let set = dao.read(sid);
+    let set = await dao.read(sid);
 
     if (set != null) {
         res.status(200);
@@ -22,22 +22,21 @@ exports.get = function(req, res) {
     res.end();
 };
 
-exports.postCreateUpdate = function(req, res) {
+exports.postCreateUpdate = async function(req, res) {
     let sname = req.body.txt_name;
     let scategory = req.body.txt_category;
     let sdescription = req.body.txt_description;
 
     if (req.body.txt_id && req.body.txt_id !== "") {
-        let sid = parseInt(req.body.txt_id);
 
         let updatedSet = {
-            _id: sid,
+            _id: req.body.txt_id,
             name: sname,
             category: scategory,
             description: sdescription
         };
 
-        dao.update(updatedSet);
+        await dao.update(updatedSet);
     } else {
         let newSet = {
             name: sname,
@@ -45,16 +44,16 @@ exports.postCreateUpdate = function(req, res) {
             description: sdescription
         };
 
-        dao.create(newSet);
+        await dao.create(newSet);
     }
 
     res.redirect('mysets.html');
 };
 
-exports.getDelete = function(req, res) {
-    let sid = parseInt(req.params.sid);
+exports.getDelete = async function(req, res) {
+    let sid = req.params.sid;
 
-    dao.del(sid);
+    await dao.del(sid);
 
     res.redirect('../mysets.html');
 };

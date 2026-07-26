@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Study Set - RegiQuiz</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+        <div class="container-fluid">
+          <!-- Links -->
+              <ul class="navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="index.html">Home Page</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="mysets.html">My Sets</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="createset.html">Create Set</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="navProfileLink" href="#">Profile</a>
+                </li>
+              </ul>
+            </div>
+
+          </nav>
+
+     <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+           <div class="col-12 col-md-8">
+
+              <h2 class="text-center mb-1" id="setName"></h2>
+              <p class="text-center text-muted mb-1" id="progressLine"></p>
+              <p class="text-center text-muted" id="masteryLine"></p>
+
+              <div class="text-center mb-3">
+                  <button id="shuffleBtn" class="btn btn-outline-secondary btn-sm">
+                      Shuffle
+                  </button>
+              </div>
+
+              <div id="noCardsAlert" class="alert alert-secondary text-center d-none" role="alert">
+                  This set doesn't have any cards yet.
+              </div>
+
+              <div id="cardArea" class="card p-4 shadow"></div>
+
+              <div id="completionArea" class="card p-4 shadow text-center d-none">
+                  <h3 class="mb-3">🎉 You've mastered every card in this set!</h3>
+                  <button id="restartBtn" class="btn btn-primary">Practice Again</button>
+              </div>
+
+              <div class="d-flex justify-content-between mt-3">
+                  <button id="prevBtn" class="btn btn-light rounded-pill">Previous</button>
+                  <button id="nextBtn" class="btn btn-light rounded-pill">Next</button>
+              </div>
+
+            </div>
+        </div>
+    </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  let currentSet = null;
+  let queue = [];
+  let currentIndex = 0;
+  let masteredIds = new Set();
+
+  function getSetIdFromUrl() {
+      let params = new URLSearchParams(window.location.search);
+      return params.get("id");
+  }
+
+  async function loadSet() {
+      let sid = getSetIdFromUrl();
+      let response = await fetch('/sets/' + sid);
+
+      if (!response.ok) {
+          document.getElementById("setName").textContent = "Set not found";
+          hideControls();
+          return;
+      }
+
+      currentSet = await response.json();
+      document.getElementById("setName").textContent = currentSet.name;
+
+      if (!currentSet.cards || currentSet.cards.length === 0) {
+          document.getElementById("noCardsAlert").classList.remove("d-none");
+          hideControls();
+          return;
+      }
+
+      queue = [...currentSet.cards];
+      currentIndex = 0;
+      masteredIds = new Set();
+
+      renderCard();
+  }
+
+  function hideControls() {
+      document.getElementById("cardArea").classList.add("d-none");
+      document.getElementById("prevBtn").classList.add("d-none");
+      document.getElementById("nextBtn").classList.add("d-none");
+      document.getElementById("shuffleBtn").classList.add("d-none");
+  }
+
+  function updateProgressLines() {
+      document.getElementById("progressLine").textContent = `Card ${currentIndex + 1} of ${queue.length} remaining`;
+      document.getElementById("masteryLine").textContent = `Mastered ${masteredIds.size} of ${currentSet.cards.length}`;
+  }
+
+  function shuffleQueue() {
+      for (let i = queue.length - 1; i > 0; i--) {
+          let j = Math.floor(Math.random() * (i + 1));
+          [queue[i], queue[j]] = [queue[j], queue[i]];
+      }
+      currentIndex = 0;
+  }
+
+  // Called when the student self-reports (term/definition) or a check-answer
+  // response comes back (math/code). Right cards drop out of the queue; wrong
+  // cards go to the back of the queue to be retried, so practice keeps going
+  // until every card has been gotten right at least once.
+  function markResult(isCorrect) {
+      let card = queue[currentIndex];
+      queue.splice(currentIndex, 1);
+
+      if (isCorrect) {
+          masteredIds.add(card._id);
+      } else {
+          queue.push(card);
+      }
+
+      if (queue.length === 0) {
+          showCompletion();
+          return;
+      }
+
+      if (currentIndex >= queue.length) currentIndex = 0;
+      renderCard();
+  }
+
+  // Shows the buttons under a check-answer result. If the student got it wrong
+  // earlier on this same card but got it right just now, offer "Close Enough"
+  // (counts as mastered) alongside "Continue" (still flags it incomplete, so
+  // it comes back around later) instead of auto-crediting the retry.
+  function renderContinueButtons(feedback, isCorrect, hadWrongAttempt) {
+      if (isCorrect && hadWrongAttempt) {
+          feedback.innerHTML += `
+              <button id="closeEnoughBtn" class="btn btn-success me-2 mt-2">Close Enough</button>
+              <button id="continueBtn" class="btn btn-outline-secondary mt-2">Continue</button>
+          `;
+          document.getElementById("closeEnoughBtn").addEventListener("click", function() {
+              markResult(true);
+          });
+          document.getElementById("continueBtn").addEventListener("click", function() {
+              markResult(false);
+          });
+      } else {
+          feedback.innerHTML += `<button id="continueBtn" class="btn btn-primary mt-2">Continue</button>`;
+          document.getElementById("continueBtn").addEventListener("click", function() {
+              markResult(isCorrect);
+          });
+      }
+  }
+
+  function showCompletion() {
+      document.getElementById("cardArea").classList.add("d-none");
+      document.getElementById("prevBtn").classList.add("d-none");
+      document.getElementById("nextBtn").classList.add("d-none");
+      document.getElementById("shuffleBtn").classList.add("d-none");
+      document.getElementById("progressLine").textContent = "";
+      document.getElementById("masteryLine").textContent = `Mastered ${currentSet.cards.length} of ${currentSet.cards.length}`;
+      document.getElementById("completionArea").classList.remove("d-none");
+  }
+
+  document.getElementById("restartBtn").addEventListener("click", function() {
+      document.getElementById("completionArea").classList.add("d-none");
+      document.getElementById("cardArea").classList.remove("d-none");
+      document.getElementById("prevBtn").classList.remove("d-none");
+      document.getElementById("nextBtn").classList.remove("d-none");
+      document.getElementById("shuffleBtn").classList.remove("d-none");
+
+      queue = [...currentSet.cards];
+      currentIndex = 0;
+      masteredIds = new Set();
+      renderCard();
+  });
+
+  function renderCard() {
+      let card = queue[currentIndex];
+
+      updateProgressLines();
+      document.getElementById("prevBtn").disabled = currentIndex === 0;
+      document.getElementById("nextBtn").disabled = currentIndex === queue.length - 1;
+
+      let cardArea = document.getElementById("cardArea");
+
+      if (card.type === "term_definition") {
+          cardArea.innerHTML = `
+              <h3 class="mb-3">${card.term}</h3>
+              <button id="revealBtn" class="btn btn-secondary mb-3">Reveal Answer</button>
+              <p id="definitionText" class="d-none fs-5">${card.definition}</p>
+              <div id="selfReportButtons" class="d-none">
+                  <button id="rightBtn" class="btn btn-success me-2">Got it Right</button>
+                  <button id="wrongBtn" class="btn btn-danger">Got it Wrong</button>
+              </div>
+          `;
+          document.getElementById("revealBtn").addEventListener("click", function() {
+              document.getElementById("definitionText").classList.remove("d-none");
+              document.getElementById("selfReportButtons").classList.remove("d-none");
+          });
+          document.getElementById("rightBtn").addEventListener("click", function() {
+              markResult(true);
+          });
+          document.getElementById("wrongBtn").addEventListener("click", function() {
+              markResult(false);
+          });
+          return;
+      }
+
+      if (card.type === "math") {
+          let hadWrongAttempt = false;
+
+          cardArea.innerHTML = `
+              <h3 class="mb-3">${card.question}</h3>
+              <div class="mb-3">
+                  <input type="text" id="answerInput" class="form-control" placeholder="Your answer">
+              </div>
+              <button id="checkBtn" class="btn btn-primary mb-3">Check Answer</button>
+              <div id="feedback"></div>
+          `;
+          document.getElementById("checkBtn").addEventListener("click", async function() {
+              let answer = document.getElementById("answerInput").value;
+              let response = await fetch('/checkcard', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ setId: currentSet._id, cardId: card._id, answer })
+              });
+              let data = await response.json();
+              let feedback = document.getElementById("feedback");
+              if (data.correct) {
+                  feedback.innerHTML = `<div class="alert alert-success">Correct!</div>`;
+              } else {
+                  feedback.innerHTML = `<div class="alert alert-danger">Not quite. ${data.error || ''}</div>`;
+              }
+              renderContinueButtons(feedback, data.correct, hadWrongAttempt);
+              if (!data.correct) hadWrongAttempt = true;
+          });
+          return;
+      }
+
+      // code
+      let hadWrongAttempt = false;
+      let displayTemplate = card.codeTemplate.split('___BLANK___').join('<mark>___BLANK___</mark>');
+      cardArea.innerHTML = `
+          <p class="mb-2">${card.question}</p>
+          <pre class="bg-light p-3 border rounded"><code>${displayTemplate}</code></pre>
+          <div class="mb-3">
+              <label class="form-label">Fill in the blank</label>
+              <input type="text" id="answerInput" class="form-control font-monospace">
+          </div>
+          <button id="checkBtn" class="btn btn-primary mb-3">Check Answer</button>
+          <div id="feedback"></div>
+      `;
+      document.getElementById("checkBtn").addEventListener("click", async function() {
+          let answer = document.getElementById("answerInput").value;
+          let response = await fetch('/checkcard', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ setId: currentSet._id, cardId: card._id, answer })
+          });
+          let data = await response.json();
+          let feedback = document.getElementById("feedback");
+
+          if (data.correct) {
+              feedback.innerHTML = `<div class="alert alert-success">Correct! Output: <code>${data.stdout}</code></div>`;
+          } else if (data.compileError) {
+              feedback.innerHTML = `<div class="alert alert-danger">Didn't compile:<pre class="mb-0">${data.compileError}</pre></div>`;
+          } else {
+              feedback.innerHTML = `<div class="alert alert-danger">Not quite. Your output: <code>${data.stdout}</code><br>Expected: <code>${data.expectedOutput}</code></div>`;
+          }
+          renderContinueButtons(feedback, data.correct, hadWrongAttempt);
+          if (!data.correct) hadWrongAttempt = true;
+      });
+  }
+
+  document.getElementById("prevBtn").addEventListener("click", function() {
+      if (currentIndex > 0) {
+          currentIndex--;
+          renderCard();
+      }
+  });
+
+  document.getElementById("nextBtn").addEventListener("click", function() {
+      if (currentIndex < queue.length - 1) {
+          currentIndex++;
+          renderCard();
+      }
+  });
+
+  document.getElementById("shuffleBtn").addEventListener("click", function() {
+      shuffleQueue();
+      renderCard();
+  });
+
+  loadSet();
+</script>
+</body>
+</html>

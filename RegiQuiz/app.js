@@ -1,5 +1,6 @@
 const controller = require("./controllers/setsController");
 const authController = require("./controllers/authController");
+const cardsController = require("./controllers/cardsController");
 
 const express = require('express');
 const morgan = require('morgan');
@@ -36,5 +37,6 @@ app.get('/logout', authController.getLogout);
 app.get('/api/whoami', authController.getWhoAmI);
 app.post('/change-password', authController.postChangePassword);
 app.post('/delete-account', authController.postDeleteAccount);
+app.post('/checkcard', cardsController.postCheckCard);
 
 exports.app = app;

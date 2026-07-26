@@ -94,6 +94,10 @@
                 <p><strong>ID:</strong> ${lstSets[i]._id}</p>
                 <p><strong>Category:</strong> ${lstSets[i].category}</p>
                 <p><strong>Description:</strong> ${lstSets[i].description}</p>
+
+                <a href="studyset.html?id=${lstSets[i]._id}" class="btn btn-success me-2">
+                  Study
+                </a>
         `;
 
         if (!isGuest) {

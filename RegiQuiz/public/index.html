@@ -116,7 +116,7 @@ async function readSetData() {
     let output = "";
 
   for (let i = 0; i < 3 && i < lstSets.length; i++) {
-    output += "<p class='fw-bold fs-5'>" + lstSets[i].name + "</p>";
+    output += `<a href="studyset.html?id=${lstSets[i]._id}" class="fw-bold fs-5 d-block text-decoration-none">${lstSets[i].name}</a>`;
   }
 
   document.getElementById("setsContainer").innerHTML = output;
@@ -132,7 +132,7 @@ function toggleSets() {
         let output = container.innerHTML;
 
         for (let i = 3; i < lstSets.length; i++) {
-            output += "<p class='extra fw-bold fs-5'>" + lstSets[i].name + "</p>";
+            output += `<a href="studyset.html?id=${lstSets[i]._id}" class="extra fw-bold fs-5 d-block text-decoration-none">${lstSets[i].name}</a>`;
         }
 
         container.innerHTML = output;
@@ -145,7 +145,7 @@ function toggleSets() {
         let output = "";
 
         for (let i = 0; i < 3 && i < lstSets.length; i++) {
-            output += "<p class='fw-bold fs-5'>" + lstSets[i].name + "</p>";
+            output += `<a href="studyset.html?id=${lstSets[i]._id}" class="fw-bold fs-5 d-block text-decoration-none">${lstSets[i].name}</a>`;
         }
 
         container.innerHTML = output;

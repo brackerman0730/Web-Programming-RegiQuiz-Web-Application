@@ -31,12 +31,12 @@
                 </li>
               </ul>
             </div>
-          
+
           </nav>
     <!-- Form Section -->
-     <div class="container mt-5">
+     <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
-           <div class="col-12 col-md-6">
+           <div class="col-12 col-md-8">
               <div class="card p-4 shadow">
                 <h2 class="text-center mb-4">
                   Edit Flashcard Set
@@ -46,7 +46,9 @@
                     You don't own this set, so you can't edit it.
                 </div>
 
-                <form id="editForm" action="/updateset" method="post">
+                <div id="editErrorAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                <form id="editForm">
                   <input type="hidden" name="txt_id" id="txt_id">
                     <!-- Set Name -->
                     <div class="mb-3">
@@ -97,6 +99,17 @@
                         </select>
                     </div>
 
+                    <hr class="my-4">
+
+                    <h4 class="mb-3">Cards</h4>
+                    <div id="cardsContainer"></div>
+
+                    <div class="d-grid mb-4">
+                        <button type="button" id="addCardBtn" class="btn btn-outline-secondary">
+                            + Add Card
+                        </button>
+                    </div>
+
                     <!-- Submit -->
                     <div class="d-grid">
                         <button type="submit" id="saveBtn" class="btn btn-primary btn-lg">
@@ -107,13 +120,14 @@
                 </form>
               </div>
             </div>
-          
+
         </div>
     </div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/cardEditor.js"></script>
 <script>
   function getSetIdFromUrl(){
     let params = new URLSearchParams(window.location.search);
@@ -131,17 +145,58 @@
     document.getElementById("txt_description").value = set.description;
     document.getElementById("txt_category").value = set.category;
 
+    let cardsContainer = document.getElementById("cardsContainer");
+    (set.cards || []).forEach(function(card) {
+        addCardRow(cardsContainer, card);
+    });
+
     let auth = await checkAuth();
     let isOwner = auth.loggedIn && set.owner && String(set.owner) === auth.userId;
 
     if (!isOwner) {
         document.getElementById("saveBtn").disabled = true;
+        document.getElementById("addCardBtn").disabled = true;
         document.getElementById("forbiddenAlert").classList.remove("d-none");
     }
   }
 
   loadSetData();
+
+  document.getElementById("addCardBtn").addEventListener("click", function() {
+      addCardRow(document.getElementById("cardsContainer"));
+  });
+
+  function showEditError(message) {
+      let alertBox = document.getElementById("editErrorAlert");
+      alertBox.textContent = message;
+      alertBox.classList.remove("d-none");
+  }
+
+  document.getElementById("editForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      document.getElementById("editErrorAlert").classList.add("d-none");
+
+      let cards = collectCards(document.getElementById("cardsContainer"));
+
+      let response = await fetch('/updateset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              txt_id: document.getElementById("txt_id").value,
+              txt_name: document.getElementById("txt_name").value,
+              txt_category: document.getElementById("txt_category").value,
+              txt_description: document.getElementById("txt_description").value,
+              cards: cards
+          })
+      });
+
+      if (response.ok) {
+          window.location.href = 'mysets.html';
+      } else {
+          let data = await response.json();
+          showEditError(data.msg + (data.detail ? ' (' + data.detail + ')' : ''));
+      }
+  });
 </script>
 </body>
 </html>
-

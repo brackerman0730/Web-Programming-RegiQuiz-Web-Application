@@ -31,12 +31,12 @@
                 </li>
               </ul>
             </div>
-          
+
           </nav>
     <!-- Form Section -->
-     <div class="container mt-5">
+     <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
-           <div class="col-12 col-md-6">
+           <div class="col-12 col-md-8">
               <div class="card p-4 shadow">
                 <h2 class="text-center mb-4">
                   Create New Flashcard Set
@@ -46,10 +46,9 @@
                     You must be logged in to create a set. <a href="login.html">Log in</a> or <a href="register.html">make an account</a>.
                 </div>
 
-                <form id="createForm" action="/sets" method="post">
+                <div id="createErrorAlert" class="alert alert-danger d-none" role="alert"></div>
 
-                  <!-- Hidden ID -->
-                  <input type="hidden" name="txt_id" id="txt_id">
+                <form id="createForm">
 
                   <!-- Set Name -->
                   <div class="mb-3">
@@ -101,6 +100,17 @@
                       </select>
                   </div>
 
+                  <hr class="my-4">
+
+                  <h4 class="mb-3">Cards</h4>
+                  <div id="cardsContainer"></div>
+
+                  <div class="d-grid mb-4">
+                      <button type="button" id="addCardBtn" class="btn btn-outline-secondary">
+                          + Add Card
+                      </button>
+                  </div>
+
                   <!-- Submit -->
                   <div class="d-grid">
                       <button type="submit" class="btn btn-primary btn-lg">
@@ -111,25 +121,61 @@
               </form>
               </div>
             </div>
-          
+
         </div>
     </div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/cardEditor.js"></script>
 <script>
   async function checkCreateAccess() {
       let data = await checkAuth();
 
       if (!data.loggedIn) {
           document.getElementById("createForm").classList.add("d-none");
+          document.getElementById("addCardBtn").classList.add("d-none");
           document.getElementById("guestAlert").classList.remove("d-none");
       }
   }
 
   checkCreateAccess();
+
+  document.getElementById("addCardBtn").addEventListener("click", function() {
+      addCardRow(document.getElementById("cardsContainer"));
+  });
+
+  function showCreateError(message) {
+      let alertBox = document.getElementById("createErrorAlert");
+      alertBox.textContent = message;
+      alertBox.classList.remove("d-none");
+  }
+
+  document.getElementById("createForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      document.getElementById("createErrorAlert").classList.add("d-none");
+
+      let cards = collectCards(document.getElementById("cardsContainer"));
+
+      let response = await fetch('/sets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              txt_name: document.querySelector('[name=txt_name]').value,
+              txt_category: document.querySelector('[name=txt_category]').value,
+              txt_description: document.querySelector('[name=txt_description]').value,
+              cards: cards
+          })
+      });
+
+      if (response.ok) {
+          window.location.href = 'mysets.html';
+      } else {
+          let data = await response.json();
+          showCreateError(data.msg + (data.detail ? ' (' + data.detail + ')' : ''));
+      }
+  });
 </script>
 </body>
 </html>
-

@@ -1,11 +1,30 @@
 const mongoose = require("mongoose");
 
+const cardSchema = new mongoose.Schema({
+    type: { type: String, enum: ['term_definition', 'math', 'code'], required: true },
+
+    // term_definition
+    term: String,
+    definition: String,
+
+    // math
+    question: String,
+    correctAnswerExpr: String,
+    correctAnswerValue: Number,
+
+    // code (question is reused as the prompt/description here too)
+    codeTemplate: String,
+    correctFill: String,
+    expectedOutput: String
+});
+
 const setSchema = mongoose.Schema({
     name: String,
     category: String,
     description: String,
     creation: { type: Date, default: Date.now },
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'user', default: null }
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'user', default: null },
+    cards: { type: [cardSchema], default: [] }
 });
 
 const setModel = mongoose.model('set', setSchema);
@@ -38,7 +57,8 @@ exports.update = async function(set) {
         {
             name: set.name,
             category: set.category,
-            description: set.description
+            description: set.description,
+            cards: set.cards
         },
         { new: true }
     );

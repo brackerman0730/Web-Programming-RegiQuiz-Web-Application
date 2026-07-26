@@ -1,3 +1,16 @@
+Beta 1.0: Flashcard content
+- Sets can now hold real cards: Term & Definition, Math, and Code (new cardSchema/cards field in dao/SetsDaoMongoose.js)
+- Math cards are checked by evaluating the typed answer as an expression (new mathjs dependency), not just matching a plain number
+- Code cards are actual fill-in-the-blank Java: the creator's template + correct answer gets compiled and run server-side when the card is saved (new services/javaRunner.js), and the expected output is captured automatically instead of typed by hand
+- Create Set has an Add Card button; Edit Set now manages cards too (shared the card-editing UI between both pages via public/js/cardEditor.js)
+- Added a Study page (studyset.html) to go through a set's cards, reachable by clicking a set on the Home Page or My Sets/Browse Sets
+- Study mode tracks progress: mark term/definition cards right or wrong yourself, math/code cards get checked automatically, and anything wrong keeps cycling back until you get it right
+- Added a Shuffle button and a "Close Enough" option (if you get a fill-in-the-blank question wrong then right before moving on, you can count it as complete or leave it flagged incomplete for next time)
+- Tests for the new Java runner service
+
+
+
+
 Alpha 1.0: Profile addition
 - Added user accounts with register/login/logout (new dao/UsersDaoMongoose.js, controllers/authController.js, sessions via express-session/connect-mongo, passwords hashed with bcryptjs)
 - Guests can still browse everyone's sets, but only logged in users can create their own (added an owner field to sets, ownership checked in the controller before update/delete)

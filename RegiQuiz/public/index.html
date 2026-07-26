@@ -37,9 +37,9 @@
           </nav>
   <div class="container my-5">
     <!-- Welcome Section -->
-    <div id="welcomeCard" class="card shadow-lg mb-5 text-center p-5">
+    <div id="welcomeCard" class="card shadow-lg mb-5 text-center p-5 regi-glow">
       <div class="card-body">
-            <h1 class="card-title" id="welcomeHeading">Welcome to RegiQuiz</h1>
+            <h1 class="card-title" id="welcomeHeading">🪨 Welcome to RegiQuiz</h1>
                 <p class="card-text">
                 The Flashcard application made for all types of problems!
                 </p>
@@ -60,10 +60,12 @@
             <div class="card shadow-lg text-center p-4 h-100">
               <div class="card-body">
                 <h3>Create New Flashcard Set</h3>
-                <a href="createset.html">
-                  <img src="images/plus--v2.png" alt="Create Set" width="100" class="my-3">
+                <a href="createset.html" class="btn btn-primary rounded-circle plus-button my-3" aria-label="Create Set">
+                  <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true">
+                    <path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                  </svg>
                 </a>
-                
+
               </div> 
             </div>
         </div>
@@ -162,7 +164,7 @@ async function updateWelcomeCard() {
     let data = await checkAuth();
 
     if (data.loggedIn) {
-        document.getElementById("welcomeHeading").textContent = "Welcome " + data.username;
+        document.getElementById("welcomeHeading").textContent = "🪨 Welcome " + data.username;
         document.getElementById("guestButtons").classList.add("d-none");
     }
 }

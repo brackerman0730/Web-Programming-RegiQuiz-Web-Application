@@ -1,5 +1,21 @@
+:root {
+    --regi-stone-light: #cbb994;
+    --regi-stone: #a68b64;
+    --regi-stone-dark: #6b5843;
+    --regi-stone-darker: #3f342a;
+    --regi-red: #e8452c;
+    --regi-red-dark: #a5301c;
+    --regi-red-glow: rgba(232, 69, 44, 0.55);
+}
+
 body {
     background-color: #F3E9DC;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(107, 88, 67, 0.10) 0, rgba(107, 88, 67, 0.10) 2px, transparent 3px),
+        radial-gradient(circle at 70% 60%, rgba(107, 88, 67, 0.10) 0, rgba(107, 88, 67, 0.10) 2px, transparent 3px),
+        radial-gradient(circle at 40% 80%, rgba(107, 88, 67, 0.08) 0, rgba(107, 88, 67, 0.08) 2px, transparent 3px),
+        radial-gradient(circle at 90% 15%, rgba(107, 88, 67, 0.08) 0, rgba(107, 88, 67, 0.08) 2px, transparent 3px);
+    background-size: 180px 180px, 220px 220px, 260px 260px, 200px 200px;
 }
 
 h1 {
@@ -7,19 +23,66 @@ h1 {
 }
 
 p {
-  color: #000000;  
+  color: #000000;
 }
 
 h3 {
     color: #000000;
 }
+
+/* Navbar reskinned as a dark rock plate with a glowing red seam along the bottom */
+.navbar {
+    background: linear-gradient(180deg, var(--regi-stone-dark), var(--regi-stone-darker)) !important;
+    border-bottom: 3px solid var(--regi-red);
+    box-shadow: 0 2px 12px rgba(232, 69, 44, 0.25);
+}
+
+/* Cards read as chunky stone slabs via their border, but stay white inside */
+.card {
+    border: 2px solid var(--regi-stone);
+    border-radius: 6px;
+    background-color: #ffffff;
+    animation: rock-settle 0.5s ease-out;
+}
+
 .btn-primary {
-    background-color: #D96F32;
+    background-color: var(--regi-red);
     border: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-primary:hover {
-    background-color: #C75D2C;
+    background-color: var(--regi-red-dark);
+    animation: regirock-rumble 0.4s ease;
+    box-shadow: 0 0 14px 2px var(--regi-red-glow);
+}
+
+.btn-primary:focus {
+    box-shadow: 0 0 0 0.25rem var(--regi-red-glow);
+}
+
+.btn-secondary {
+    background-color: var(--regi-stone);
+    border-color: var(--regi-stone-dark);
+}
+
+.btn-secondary:hover {
+    background-color: var(--regi-stone-dark);
+    border-color: var(--regi-stone-darker);
+    animation: regirock-rumble 0.4s ease;
+}
+
+/* Round "+" button on the homepage - a real .btn-primary underneath, so its
+   color follows the theme instead of being baked into a static image. The
+   plus is an SVG (not a text glyph) so it centers exactly regardless of font
+   metrics; flex here centers that SVG within the circle. */
+.plus-button {
+    width: 100px;
+    height: 100px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .nav-tabs .nav-link {
@@ -35,5 +98,37 @@ h3 {
 .nav-tabs .nav-link.active {
     background-color: #ffffff;
     color: #000000;
+    border-bottom: 3px solid var(--regi-red);
 }
 
+/* Regirock's glowing red core - a slow pulsing accent for a highlighted spot */
+@keyframes regirock-pulse {
+    0%, 100% { box-shadow: 0 0 6px 1px var(--regi-red-glow); }
+    50% { box-shadow: 0 0 20px 5px var(--regi-red-glow); }
+}
+
+.regi-glow {
+    animation: regirock-pulse 2.2s ease-in-out infinite;
+}
+
+/* .card already sets its own entrance animation via the shorthand, so a plain
+   .regi-glow rule would silently replace it instead of adding to it. This
+   compound selector combines both so cards that also glow still settle in. */
+.card.regi-glow {
+    animation: rock-settle 0.5s ease-out, regirock-pulse 2.2s ease-in-out infinite;
+}
+
+/* A small tremor, like the ground shifting underfoot */
+@keyframes regirock-rumble {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-1px, 1px); }
+    40% { transform: translate(1px, -1px); }
+    60% { transform: translate(-1px, -1px); }
+    80% { transform: translate(1px, 1px); }
+}
+
+/* Cards settle into place like rock plates assembling */
+@keyframes rock-settle {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}

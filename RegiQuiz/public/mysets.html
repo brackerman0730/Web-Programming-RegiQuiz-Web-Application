@@ -18,7 +18,7 @@
           <!-- Links -->
               <ul class="navbar-nav">
                 <li class="nav-item">
-                  <a class="nav-link" href="index.html">Welcome Page</a>
+                  <a class="nav-link" href="index.html">Home Page</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="mysets.html">My Sets</a>
@@ -27,28 +27,56 @@
                   <a class="nav-link" href="createset.html">Create Set</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="#">Profile</a>
+                  <a class="nav-link" id="navProfileLink" href="#">Profile</a>
                 </li>
               </ul>
             </div>
-          
+
           </nav>
     <!-- Set List -->
      <div class="container mt-5">
-        <h1 class="text-center mb-4">
+        <h1 class="text-center mb-4" id="setsHeading">
           My Sets
         </h1>
+
+        <div id="guestBanner" class="alert alert-secondary text-center d-none" role="alert">
+            You're browsing as a guest — <a href="login.html">log in</a> or <a href="register.html">make an account</a> to create your own sets.
+        </div>
+        <div id="forbiddenBanner" class="alert alert-warning text-center d-none" role="alert">
+            You don't have permission to do that.
+        </div>
+
         <div class="row" id="setsRow"></div>
     </div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js"></script>
 <script>
   let lstSets = [];
+  let isGuest = true;
 
   async function readSetData() {
-      let response = await fetch('/sets');
-      lstSets = await response.json();
+      let auth = await checkAuth();
+      isGuest = !auth.loggedIn;
+
+      let params = new URLSearchParams(window.location.search);
+      if (params.get("error") === "forbidden") {
+          document.getElementById("forbiddenBanner").classList.remove("d-none");
+      }
+
+      if (isGuest) {
+          document.getElementById("setsHeading").textContent = "Browse Sets";
+          document.getElementById("guestBanner").classList.remove("d-none");
+
+          let response = await fetch('/sets');
+          lstSets = await response.json();
+      } else {
+          document.getElementById("setsHeading").textContent = "My Sets";
+
+          let response = await fetch('/mysets');
+          lstSets = await response.json();
+      }
 
       if (lstSets.length == 0) {
         document.getElementById("setsRow").innerHTML =
@@ -66,7 +94,10 @@
                 <p><strong>ID:</strong> ${lstSets[i]._id}</p>
                 <p><strong>Category:</strong> ${lstSets[i].category}</p>
                 <p><strong>Description:</strong> ${lstSets[i].description}</p>
+        `;
 
+        if (!isGuest) {
+          output += `
                 <a href="editset.html?id=${lstSets[i]._id}" class="btn btn-primary me-2">
                   Edit
                 </a>
@@ -74,6 +105,10 @@
                 <a href="/deleteset/${lstSets[i]._id}" class="btn btn-danger" onclick="return deleteCheck();">
                   Delete
                 </a>
+          `;
+        }
+
+        output += `
               </div>
             </div>
           </div>
@@ -92,4 +127,3 @@
 </script>
 </body>
 </html>
-

@@ -18,7 +18,7 @@
           <!-- Links -->
               <ul class="navbar-nav">
                 <li class="nav-item">
-                  <a class="nav-link" href="index.html">Welcome Page</a>
+                  <a class="nav-link" href="index.html">Home Page</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="mysets.html">My Sets</a>
@@ -27,7 +27,7 @@
                   <a class="nav-link" href="createset.html">Create Set</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="#">Profile</a>
+                  <a class="nav-link" id="navProfileLink" href="#">Profile</a>
                 </li>
               </ul>
             </div>
@@ -42,7 +42,11 @@
                   Create New Flashcard Set
                 </h2>
 
-                <form action="/sets" method="post">
+                <div id="guestAlert" class="alert alert-warning d-none" role="alert">
+                    You must be logged in to create a set. <a href="login.html">Log in</a> or <a href="register.html">make an account</a>.
+                </div>
+
+                <form id="createForm" action="/sets" method="post">
 
                   <!-- Hidden ID -->
                   <input type="hidden" name="txt_id" id="txt_id">
@@ -113,6 +117,19 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  async function checkCreateAccess() {
+      let data = await checkAuth();
+
+      if (!data.loggedIn) {
+          document.getElementById("createForm").classList.add("d-none");
+          document.getElementById("guestAlert").classList.remove("d-none");
+      }
+  }
+
+  checkCreateAccess();
+</script>
 </body>
 </html>
 

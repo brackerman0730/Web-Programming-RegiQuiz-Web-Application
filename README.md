@@ -1,3 +1,15 @@
+Alpha 1.0: Profile addition
+- Added user accounts with register/login/logout (new dao/UsersDaoMongoose.js, controllers/authController.js, sessions via express-session/connect-mongo, passwords hashed with bcryptjs)
+- Guests can still browse everyone's sets, but only logged in users can create their own (added an owner field to sets, ownership checked in the controller before update/delete)
+- My Sets page now shows only your own sets when logged in, and everyone's sets (view only, no edit/delete) when browsing as a guest
+- Added a Profile page with tabs for Personal Info, Appearance (theme picker coming later), and Account & Privacy
+- Added a Change Password page and a Delete Account option
+- Renamed "Welcome Page" to "Home Page" in the navbar
+- Tests for the new Users Dao
+
+
+
+
 ChangeLog for Assignment #5
 - Added support for MongoDB/Mongoose (changes in server.js, added app.js, new dao, edited controller, .env, DbConnection.js)
 - Set IDs for mongoose work differently so to keep coninuity I kept the ID field in "My sets" the same even though the IDS are now messy and long

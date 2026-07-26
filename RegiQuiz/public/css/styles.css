@@ -22,3 +22,18 @@ h3 {
     background-color: #C75D2C;
 }
 
+.nav-tabs .nav-link {
+    background-color: #d9d9d9;
+    color: #000000;
+}
+
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+    color: #000000;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #ffffff;
+    color: #000000;
+}
+

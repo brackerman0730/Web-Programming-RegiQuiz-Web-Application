@@ -4,7 +4,8 @@ const setSchema = mongoose.Schema({
     name: String,
     category: String,
     description: String,
-    creation: { type: Date, default: Date.now }
+    creation: { type: Date, default: Date.now },
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'user', default: null }
 });
 
 const setModel = mongoose.model('set', setSchema);
@@ -18,6 +19,11 @@ exports.readAll = async function() {
 exports.read = async function(sid) {
     const set = await setModel.findById(sid);
     return set;
+}
+
+exports.readByOwner = async function(ownerId) {
+    const lstSets = await setModel.find({ owner: ownerId }).sort({ creation: -1 });
+    return lstSets;
 }
 
 exports.create = async function(set) {

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Profile - RegiQuiz</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+        <div class="container-fluid">
+          <!-- Links -->
+              <ul class="navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="index.html">Home Page</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="mysets.html">My Sets</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="createset.html">Create Set</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="navProfileLink" href="#">Profile</a>
+                </li>
+              </ul>
+            </div>
+
+          </nav>
+    <!-- Profile Section -->
+     <div class="container mt-5">
+        <div class="row justify-content-center">
+           <div class="col-12 col-md-8">
+              <h2 class="mb-4 text-center">Profile</h2>
+
+              <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal-pane" type="button" role="tab" aria-selected="true">
+                    Personal Info
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="appearance-tab" data-bs-toggle="tab" data-bs-target="#appearance-pane" type="button" role="tab" aria-selected="false">
+                    Appearance
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="account-tab" data-bs-toggle="tab" data-bs-target="#account-pane" type="button" role="tab" aria-selected="false">
+                    Account &amp; Privacy
+                  </button>
+                </li>
+              </ul>
+
+              <div class="tab-content bg-white border border-top-0 rounded-bottom p-4 shadow" id="profileTabsContent">
+
+                <!-- Personal Info -->
+                <div class="tab-pane fade show active" id="personal-pane" role="tabpanel">
+                  <div class="mb-3">
+                      <label class="form-label">Username</label>
+                      <input type="text" id="profileUsername" class="form-control" readonly>
+                  </div>
+
+                  <div class="mb-3">
+                      <label class="form-label">Password</label>
+                      <input type="password" class="form-control" value="!!!!!!!!" disabled>
+                  </div>
+
+                  <p><strong>Joined:</strong> <span id="profileJoined"></span></p>
+                  <p><strong>Sets created:</strong> <span id="profileSetCount"></span></p>
+                </div>
+
+                <!-- Appearance -->
+                <div class="tab-pane fade" id="appearance-pane" role="tabpanel">
+                  <div class="mb-3">
+                      <label class="form-label">Theme</label>
+                      <select class="form-select" disabled>
+                          <option>Light</option>
+                          <option>Dark</option>
+                          <option>System</option>
+                      </select>
+                  </div>
+                  <p class="text-muted">Theme customization is coming soon.</p>
+                </div>
+
+                <!-- Account & Privacy -->
+                <div class="tab-pane fade" id="account-pane" role="tabpanel">
+                  <div id="deleteError" class="alert alert-danger d-none" role="alert"></div>
+
+                  <div class="d-grid gap-2">
+                      <a href="changepassword.html" class="btn btn-primary">
+                          Change Password
+                      </a>
+
+                      <a href="/logout" class="btn btn-outline-secondary">
+                          Log Out
+                      </a>
+
+                      <button id="deleteAccountBtn" class="btn btn-outline-danger">
+                          Delete Account
+                      </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+        </div>
+    </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  async function loadProfile() {
+      let data = await checkAuth();
+
+      if (!data.loggedIn) {
+          window.location.href = "login.html";
+          return;
+      }
+
+      document.getElementById("profileUsername").value = data.username;
+      document.getElementById("profileJoined").textContent = new Date(data.creation).toLocaleDateString();
+
+      let mineResponse = await fetch('/mysets');
+      let mySets = await mineResponse.json();
+
+      document.getElementById("profileSetCount").textContent = mySets.length;
+  }
+
+  loadProfile();
+
+  document.getElementById("deleteAccountBtn").addEventListener("click", async function() {
+      let confirmed = window.confirm("Are you sure you want to delete your account? This cannot be undone.");
+      if (!confirmed) return;
+
+      let response = await fetch('/delete-account', { method: 'POST' });
+      let data = await response.json();
+
+      if (data.success) {
+          window.location.href = "index.html";
+      } else {
+          let errorAlert = document.getElementById("deleteError");
+          errorAlert.textContent = data.message;
+          errorAlert.classList.remove("d-none");
+      }
+  });
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <script src="js/theme-init.js"></script>
     <title>MySets - RegiQuiz</title>
 
     <!-- Bootstrap CSS -->
@@ -52,11 +53,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/regiLoader.js"></script>
 <script>
   let lstSets = [];
   let isGuest = true;
 
   async function readSetData() {
+      showRegiLoader(document.getElementById("setsRow"));
+
       let auth = await checkAuth();
       isGuest = !auth.loggedIn;
 

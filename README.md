@@ -1,4 +1,11 @@
-Beta 1.0: Flashcard content
+Beta 2.0: Regi theming
+- Edit Set now manages cards too, not just create (dao.update persists cards, both create/update share the same math/code validation so an edited card gets re-checked and re-derived the same way a new one does)
+- Reskinned the whole app around a Regirock theme, then built out a real theme system: Regirock, Regice, Registeel, Regigigas, Regieleki, and Regidrago, picked from a dropdown in Profile > Appearance and saved so it sticks across pages (public/js/theme.js, public/js/theme-init.js)
+- Every theme has its own color palette, its own background pattern (fracture crosshatch, ice crystal grid, brushed metal, topographic rings, zigzag chevron, or speckled dots), and its own button hover animation (rumble, stomp, shimmer, clank, glow, or flare)
+- Added a themed loading animation shaped like each Regi's eye markings (public/js/regiLoader.js) that shows on Home Page/My Sets/Study Set while data is loading instead of content just popping in
+- Replaced the create-set "+" image with a real button (an SVG plus, not a picture) so it actually follows the theme colors instead of being a fixed image
+
+
 - Sets can now hold real cards: Term & Definition, Math, and Code (new cardSchema/cards field in dao/SetsDaoMongoose.js)
 - Math cards are checked by evaluating the typed answer as an expression (new mathjs dependency), not just matching a plain number
 - Code cards are actual fill-in-the-blank Java: the creator's template + correct answer gets compiled and run server-side when the card is saved (new services/javaRunner.js), and the expected output is captured automatically instead of typed by hand

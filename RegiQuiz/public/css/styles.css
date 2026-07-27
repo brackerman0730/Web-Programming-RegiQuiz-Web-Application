@@ -1,20 +1,128 @@
+/* Theme tokens. Default (no data-theme attribute yet, or data-theme="regirock")
+   is the original Regirock look. Each [data-theme="..."] block below reassigns
+   the same token names to a different legendary titan's palette - nothing else
+   in this file needs to know which theme is active. */
 :root {
-    --regi-stone-light: #cbb994;
-    --regi-stone: #a68b64;
-    --regi-stone-dark: #6b5843;
-    --regi-stone-darker: #3f342a;
-    --regi-red: #e8452c;
-    --regi-red-dark: #a5301c;
-    --regi-red-glow: rgba(232, 69, 44, 0.55);
+    --theme-accent: #ee8339;
+    --theme-accent-dark: #b44100;
+    --theme-accent-glow: rgba(180, 65, 0, 0.55);
+    --theme-secondary: #e6deac;
+    --theme-secondary-dark: #948b73;
+    --theme-secondary-darker: #595345;
+    --theme-body-bg: #F3E9DC;
+    --theme-texture-rgb: 107, 88, 67;
+}
+
+/* Regice - Ice type: icy blues over pale frost */
+[data-theme="regice"] {
+    --theme-accent: #1f96c4;
+    --theme-accent-dark: #e9f100;
+    --theme-accent-glow: rgba(141, 151, 0, 0.55);
+    --theme-secondary: #a9cdda;
+    --theme-secondary-dark: #6d97a8;
+    --theme-secondary-darker: #3c5c68;
+    --theme-body-bg: #eaf6fb;
+    --theme-texture-rgb: 60, 130, 160;
+}
+
+/* Registeel - Steel type: brushed metal grays */
+[data-theme="registeel"] {
+    --theme-accent: #5a7891;
+    --theme-accent-dark: #ff0000;
+    --theme-accent-glow: rgba(129, 0, 0, 0.5);
+    --theme-secondary: #9aa3ab;
+    --theme-secondary-dark: #666e75;
+    --theme-secondary-darker: #3a3f44;
+    --theme-body-bg: #eceef0;
+    --theme-texture-rgb: 90, 100, 110;
+}
+
+/* Regigigas - the colossal ancient golem: earthy, muted gold */
+[data-theme="regigigas"] {
+    --theme-accent: #f6d55a;
+    --theme-accent-dark: #c59c52;
+    --theme-accent-glow: rgba(212, 160, 23, 0.55);
+    --theme-secondary: #4aa462;
+    --theme-secondary-dark: #20836a;
+    --theme-secondary-darker: #165947;
+    --theme-body-bg: #f2e8d0;
+    --theme-texture-rgb: 120, 100, 40;
+}
+
+/* Regieleki - Electric type: dark navy with a neon-yellow charge */
+[data-theme="regieleki"] {
+    --theme-accent: #f0f340;
+    --theme-accent-dark: #ffa194;
+    --theme-accent-glow: rgba(255, 161, 148, 0.55);
+    --theme-secondary: #f0f340;
+    --theme-secondary-dark: #006dcd;
+    --theme-secondary-darker: #003494;
+    --theme-body-bg: #fdfbe6;
+    --theme-texture-rgb: 60, 55, 120;
+}
+
+/* Regidrago - Dragon type: jade-green body with a warm glowing core */
+[data-theme="regidrago"] {
+    --theme-accent: #e05276;
+    --theme-accent-dark: #1594dd;
+    --theme-accent-glow: rgba(0, 71, 138, 0.55);
+    --theme-secondary: #4b6f78;
+    --theme-secondary-dark: #3f545f;
+    --theme-secondary-darker: #242e35;
+    --theme-body-bg: #e8f5f0;
+    --theme-texture-rgb: 40, 100, 80;
 }
 
 body {
-    background-color: #F3E9DC;
+    background-color: var(--theme-body-bg);
+}
+
+/* Each theme gets its own background pattern shape (not just a recolor of
+   one shared pattern), matching its type. Regirock is also the fallback for
+   when data-theme hasn't been set yet. */
+body,
+[data-theme="regirock"] body {
     background-image:
-        radial-gradient(circle at 20% 30%, rgba(107, 88, 67, 0.10) 0, rgba(107, 88, 67, 0.10) 2px, transparent 3px),
-        radial-gradient(circle at 70% 60%, rgba(107, 88, 67, 0.10) 0, rgba(107, 88, 67, 0.10) 2px, transparent 3px),
-        radial-gradient(circle at 40% 80%, rgba(107, 88, 67, 0.08) 0, rgba(107, 88, 67, 0.08) 2px, transparent 3px),
-        radial-gradient(circle at 90% 15%, rgba(107, 88, 67, 0.08) 0, rgba(107, 88, 67, 0.08) 2px, transparent 3px);
+        repeating-linear-gradient(45deg, rgba(var(--theme-texture-rgb), 0.07) 0px, rgba(var(--theme-texture-rgb), 0.07) 1px, transparent 1px, transparent 42px),
+        repeating-linear-gradient(-45deg, rgba(var(--theme-texture-rgb), 0.07) 0px, rgba(var(--theme-texture-rgb), 0.07) 1px, transparent 1px, transparent 42px);
+}
+
+/* Regice - a 3-direction crystal-facet grid, like ice lattice */
+[data-theme="regice"] body {
+    background-image:
+        repeating-linear-gradient(60deg, rgba(var(--theme-texture-rgb), 0.08) 0px, rgba(var(--theme-texture-rgb), 0.08) 1px, transparent 1px, transparent 46px),
+        repeating-linear-gradient(-60deg, rgba(var(--theme-texture-rgb), 0.08) 0px, rgba(var(--theme-texture-rgb), 0.08) 1px, transparent 1px, transparent 46px),
+        repeating-linear-gradient(0deg, rgba(var(--theme-texture-rgb), 0.06) 0px, rgba(var(--theme-texture-rgb), 0.06) 1px, transparent 1px, transparent 46px);
+}
+
+/* Registeel - fine brushed-metal diagonal lines */
+[data-theme="registeel"] body {
+    background-image: repeating-linear-gradient(115deg, rgba(var(--theme-texture-rgb), 0.06) 0px, rgba(var(--theme-texture-rgb), 0.06) 1px, transparent 1px, transparent 7px);
+}
+
+/* Regigigas - topographic contour rings, like an ancient landmass map */
+[data-theme="regigigas"] body {
+    background-image: repeating-radial-gradient(circle at 25% 35%, rgba(var(--theme-texture-rgb), 0.09) 0px, rgba(var(--theme-texture-rgb), 0.09) 1px, transparent 1px, transparent 55px);
+}
+
+/* Regieleki - an angular zigzag chevron, electric/circuit-like */
+[data-theme="regieleki"] body {
+    background-image:
+        linear-gradient(135deg, rgba(var(--theme-texture-rgb), 0.10) 25%, transparent 25%),
+        linear-gradient(225deg, rgba(var(--theme-texture-rgb), 0.10) 25%, transparent 25%),
+        linear-gradient(315deg, rgba(var(--theme-texture-rgb), 0.10) 25%, transparent 25%),
+        linear-gradient(45deg, rgba(var(--theme-texture-rgb), 0.10) 25%, transparent 25%);
+    background-size: 34px 34px;
+    background-position: 0 0, 17px 0, 17px -17px, 0px 17px;
+}
+
+/* Regidrago - the original speckled dots */
+[data-theme="regidrago"] body {
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(var(--theme-texture-rgb), 0.10) 0, rgba(var(--theme-texture-rgb), 0.10) 2px, transparent 3px),
+        radial-gradient(circle at 70% 60%, rgba(var(--theme-texture-rgb), 0.10) 0, rgba(var(--theme-texture-rgb), 0.10) 2px, transparent 3px),
+        radial-gradient(circle at 40% 80%, rgba(var(--theme-texture-rgb), 0.08) 0, rgba(var(--theme-texture-rgb), 0.08) 2px, transparent 3px),
+        radial-gradient(circle at 90% 15%, rgba(var(--theme-texture-rgb), 0.08) 0, rgba(var(--theme-texture-rgb), 0.08) 2px, transparent 3px);
     background-size: 180px 180px, 220px 220px, 260px 260px, 200px 200px;
 }
 
@@ -30,46 +138,76 @@ h3 {
     color: #000000;
 }
 
-/* Navbar reskinned as a dark rock plate with a glowing red seam along the bottom */
+/* Navbar reskinned as a dark plate with a glowing seam along the bottom */
 .navbar {
-    background: linear-gradient(180deg, var(--regi-stone-dark), var(--regi-stone-darker)) !important;
-    border-bottom: 3px solid var(--regi-red);
-    box-shadow: 0 2px 12px rgba(232, 69, 44, 0.25);
+    background: linear-gradient(180deg, var(--theme-secondary-dark), var(--theme-secondary-darker)) !important;
+    border-bottom: 3px solid var(--theme-accent);
+    box-shadow: 0 2px 12px var(--theme-accent-glow);
 }
 
-/* Cards read as chunky stone slabs via their border, but stay white inside */
+/* Cards read as chunky slabs via their border, but stay white inside */
 .card {
-    border: 2px solid var(--regi-stone);
+    border: 2px solid var(--theme-secondary);
     border-radius: 6px;
     background-color: #ffffff;
     animation: rock-settle 0.5s ease-out;
 }
 
 .btn-primary {
-    background-color: var(--regi-red);
+    background-color: var(--theme-accent);
     border: none;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-primary:hover {
-    background-color: var(--regi-red-dark);
+    background-color: var(--theme-accent-dark);
     animation: regirock-rumble 0.4s ease;
-    box-shadow: 0 0 14px 2px var(--regi-red-glow);
+    box-shadow: 0 0 14px 2px var(--theme-accent-glow);
 }
 
 .btn-primary:focus {
-    box-shadow: 0 0 0 0.25rem var(--regi-red-glow);
+    box-shadow: 0 0 0 0.25rem var(--theme-accent-glow);
 }
 
 .btn-secondary {
-    background-color: var(--regi-stone);
-    border-color: var(--regi-stone-dark);
+    background-color: var(--theme-secondary);
+    border-color: var(--theme-secondary-dark);
 }
 
 .btn-secondary:hover {
-    background-color: var(--regi-stone-dark);
-    border-color: var(--regi-stone-darker);
+    background-color: var(--theme-secondary-dark);
+    border-color: var(--theme-secondary-darker);
     animation: regirock-rumble 0.4s ease;
+}
+
+/* Each theme swaps in its own hover animation instead of Regirock's rumble
+   (Regigigas keeps a rumble too, just a slower/heavier one of its own) */
+[data-theme="regice"] .btn-primary:hover,
+[data-theme="regice"] .btn-secondary:hover {
+    animation: regice-shimmer 0.5s ease;
+}
+
+[data-theme="registeel"] .btn-primary:hover,
+[data-theme="registeel"] .btn-secondary:hover {
+    animation: registeel-clank 0.4s ease;
+}
+
+[data-theme="regigigas"] .btn-primary:hover,
+[data-theme="regigigas"] .btn-secondary:hover {
+    animation: regigigas-stomp 0.7s ease;
+}
+
+/* Just the plain hover glow every button already gets from .btn-primary:hover
+   - no extra motion. Has to be spelled out, since without an override this
+   would otherwise fall back to Regirock's rumble, not "no animation." */
+[data-theme="regieleki"] .btn-primary:hover,
+[data-theme="regieleki"] .btn-secondary:hover {
+    animation: none;
+}
+
+[data-theme="regidrago"] .btn-primary:hover,
+[data-theme="regidrago"] .btn-secondary:hover {
+    animation: regidrago-flare 0.6s ease;
 }
 
 /* Round "+" button on the homepage - a real .btn-primary underneath, so its
@@ -98,13 +236,13 @@ h3 {
 .nav-tabs .nav-link.active {
     background-color: #ffffff;
     color: #000000;
-    border-bottom: 3px solid var(--regi-red);
+    border-bottom: 3px solid var(--theme-accent);
 }
 
-/* Regirock's glowing red core - a slow pulsing accent for a highlighted spot */
+/* A slow pulsing glow - a highlighted spot, like a Regi's glowing core */
 @keyframes regirock-pulse {
-    0%, 100% { box-shadow: 0 0 6px 1px var(--regi-red-glow); }
-    50% { box-shadow: 0 0 20px 5px var(--regi-red-glow); }
+    0%, 100% { box-shadow: 0 0 6px 1px var(--theme-accent-glow); }
+    50% { box-shadow: 0 0 20px 5px var(--theme-accent-glow); }
 }
 
 .regi-glow {
@@ -131,4 +269,62 @@ h3 {
 @keyframes rock-settle {
     from { opacity: 0; transform: translateY(14px) scale(0.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Regice - a bright shimmer, like light glinting off ice */
+@keyframes regice-shimmer {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.5); }
+}
+
+/* Registeel - a sharp flex, like metal absorbing a strike */
+@keyframes registeel-clank {
+    0% { transform: scaleY(1); }
+    30% { transform: scaleY(0.88); }
+    60% { transform: scaleY(1.06); }
+    100% { transform: scaleY(1); }
+}
+
+/* Regigigas - a slow, heavy stomp: compresses under enormous weight, then
+   releases into an outward shockwave. Slower than everything else on purpose,
+   to sell the mass (a giant doesn't move quick). */
+@keyframes regigigas-stomp {
+    0% { transform: scale(1); box-shadow: 0 0 14px 2px var(--theme-accent-glow); }
+    35% { transform: scale(0.9); box-shadow: 0 0 6px 1px var(--theme-accent-glow); }
+    70% { transform: scale(1.04); box-shadow: 0 0 26px 12px var(--theme-accent-glow); }
+    100% { transform: scale(1); box-shadow: 0 0 14px 2px var(--theme-accent-glow); }
+}
+
+/* Regidrago - the warm core flares up and fades, like its chest markings */
+@keyframes regidrago-flare {
+    0% { box-shadow: 0 0 0 0 var(--theme-accent-glow); }
+    50% { box-shadow: 0 0 24px 10px var(--theme-accent-glow); }
+    100% { box-shadow: 0 0 14px 2px var(--theme-accent-glow); }
+}
+
+/* Loading indicator shaped like the current theme's Regi's eyes/markings,
+   used wherever content pops in after a fetch instead of a plain blank gap */
+.regi-loader-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+}
+
+.regi-loader {
+    display: grid;
+    gap: 10px;
+}
+
+.regi-loader-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    animation: regi-loader-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes regi-loader-blink {
+    0%, 100% { opacity: 0.15; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1); }
 }

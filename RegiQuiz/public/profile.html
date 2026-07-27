@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <script src="js/theme-init.js"></script>
     <title>Profile - RegiQuiz</title>
 
     <!-- Bootstrap CSS -->
@@ -79,13 +80,9 @@
                 <div class="tab-pane fade" id="appearance-pane" role="tabpanel">
                   <div class="mb-3">
                       <label class="form-label">Theme</label>
-                      <select class="form-select" disabled>
-                          <option>Light</option>
-                          <option>Dark</option>
-                          <option>System</option>
-                      </select>
+                      <select id="themeSelect" class="form-select"></select>
                   </div>
-                  <p class="text-muted">Theme customization is coming soon.</p>
+                  <p class="text-muted">Pick a legendary titan to theme RegiQuiz after.</p>
                 </div>
 
                 <!-- Account & Privacy -->
@@ -116,6 +113,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/theme.js"></script>
 <script>
   async function loadProfile() {
       let data = await checkAuth();
@@ -135,6 +133,22 @@
   }
 
   loadProfile();
+
+  function loadThemePicker() {
+      let select = document.getElementById("themeSelect");
+
+      select.innerHTML = REGI_THEMES.map(function(t) {
+          return `<option value="${t.value}">${t.label}</option>`;
+      }).join("");
+
+      select.value = getSavedTheme();
+
+      select.addEventListener("change", function() {
+          setTheme(select.value);
+      });
+  }
+
+  loadThemePicker();
 
   document.getElementById("deleteAccountBtn").addEventListener("click", async function() {
       let confirmed = window.confirm("Are you sure you want to delete your account? This cannot be undone.");

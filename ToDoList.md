@@ -21,7 +21,12 @@
 6. Mobile support
 - Will work on phone, likely need to be running on computer already but still
 
-7. Little things
+7. Allow for saving progress and continuing later
+- Show completion rate on sets for sorting as a color coded bar,
+8. Ai chatbot to help make questions and give hints
+9. Little things
+- Show a symbol in the set to show what kind of flash card set is
+  - Will all be powerpoint art for consistency, colored based on the theme
 - Sets will show a created data and a last edited date
 - Regirock changed to a crumbled rock background
 - Regieleki change also

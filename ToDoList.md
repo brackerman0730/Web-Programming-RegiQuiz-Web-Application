@@ -15,12 +15,19 @@
 - when shuffle is on, these will still be in order according to one another
 - Have the option to select per group whether to already flag correct answers as done or force the entire group to have to be finished before continuing. Can be changed in settings whether this setting is on by default
 
-5. Little things
+5. Ability to make a set public or private, so users can look up sets made by other users
+- Allow the ability to copy other sets to be your own
+
+6. Mobile support
+- Will work on phone, likely need to be running on computer already but still
+
+7. Little things
 - Sets will show a created data and a last edited date
 - Regirock changed to a crumbled rock background
 - Regieleki change also
 - Darkrai mode for a better dark mode. Loading screen will be it blinking
 - Fix certain pop ins like the welcome loading for a split second, maybe always have the loading thing until its ready
+- Change Home page to just be the welcome page only for logged out users. Make a home page for logged in users with all necessary info
 - Make more things fill up the screen better
 - Set Description extra spaces at the beginning
 - RegiQuiz Style, makes the ui have a fancy look.

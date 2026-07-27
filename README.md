@@ -6,6 +6,7 @@ Beta 2.0: Regi theming
 - Replaced the create-set "+" image with a real button (an SVG plus, not a picture) so it actually follows the theme colors instead of being a fixed image
 
 
+Beta 1.0: Flashcard content
 - Sets can now hold real cards: Term & Definition, Math, and Code (new cardSchema/cards field in dao/SetsDaoMongoose.js)
 - Math cards are checked by evaluating the typed answer as an expression (new mathjs dependency), not just matching a plain number
 - Code cards are actual fill-in-the-blank Java: the creator's template + correct answer gets compiled and run server-side when the card is saved (new services/javaRunner.js), and the expected output is captured automatically instead of typed by hand

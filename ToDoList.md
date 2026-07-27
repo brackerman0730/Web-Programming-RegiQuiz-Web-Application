@@ -1,0 +1,30 @@
+1. Import cards feature
+- From text: Works with terms and definition first, another feature can be added to account for all kinds of cards
+- Import cards from Quizlet link
+
+2. Other Languages
+- C, C#, C++, JS, Python, HTML
+
+3. Can show term or definition in front first
+- Can also handle images for both side
+- An option to switch which side is stored as term or definition so one remains unflipped when selecting which to show first
+
+4. Grouping cards into groups
+- Can be split into parts
+- Also works for math questions and coding
+- when shuffle is on, these will still be in order according to one another
+- Have the option to select per group whether to already flag correct answers as done or force the entire group to have to be finished before continuing. Can be changed in settings whether this setting is on by default
+
+5. Little things
+- Sets will show a created data and a last edited date
+- Regirock changed to a crumbled rock background
+- Regieleki change also
+- Darkrai mode for a better dark mode. Loading screen will be it blinking
+- Fix certain pop ins like the welcome loading for a split second, maybe always have the loading thing until its ready
+- Make more things fill up the screen better
+- Set Description extra spaces at the beginning
+
+
+
+To test:
+-Text limits

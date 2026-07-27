@@ -23,7 +23,9 @@
 - Fix certain pop ins like the welcome loading for a split second, maybe always have the loading thing until its ready
 - Make more things fill up the screen better
 - Set Description extra spaces at the beginning
-
+- RegiQuiz Style, makes the ui have a fancy look.
+- Attach to Dashboard
+-   Will have GPA calc, Trackoff, RegiQuiz, 
 
 
 To test:

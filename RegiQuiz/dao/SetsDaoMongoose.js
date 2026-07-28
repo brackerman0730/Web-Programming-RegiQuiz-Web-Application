@@ -40,6 +40,7 @@ const setSchema = mongoose.Schema({
     category: String,
     description: String,
     creation: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'user', default: null },
     cards: { type: [cardSchema], default: [] },
     groups: { type: [groupSchema], default: [] },
@@ -85,7 +86,8 @@ exports.update = async function(set) {
             cards: set.cards,
             groups: set.groups,
             defaultGroupMode: set.defaultGroupMode,
-            groupForceMode: set.groupForceMode
+            groupForceMode: set.groupForceMode,
+            updatedAt: new Date()
         },
         { new: true }
     );

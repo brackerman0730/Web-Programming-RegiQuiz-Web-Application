@@ -72,6 +72,11 @@
                   This set doesn't have any cards yet.
               </div>
 
+              <div class="progress mb-3" id="progressBar" style="height: 10px;">
+                  <div class="progress-bar bg-success" id="masteredBar" role="progressbar"></div>
+                  <div class="progress-bar bg-warning" id="inProgressBar" role="progressbar"></div>
+              </div>
+
               <div id="cardArea" class="card p-4 shadow"></div>
 
               <div id="completionArea" class="card p-4 shadow text-center d-none">
@@ -104,6 +109,22 @@
   // correctly so far in the current clean pass. Cleared on any wrong answer
   // in that group, or once the whole group clears (see markResult).
   let groupPassProgress = {};
+  let isLoggedIn = false;
+  // Cards answered wrong at least once but not yet mastered ("still
+  // learning"). Persisted alongside masteredIds so it survives a reload.
+  let inProgressIds = new Set();
+
+  // A single bar split proportionally into a green fill (mastered / total)
+  // and an orange fill (still-learning / total); any remainder is left
+  // unfilled, showing the container's own background for "not attempted yet".
+  function renderProgressBar() {
+      let total = currentSet.cards.length;
+      let masteredPct = total === 0 ? 0 : (masteredIds.size / total) * 100;
+      let inProgressPct = total === 0 ? 0 : (inProgressIds.size / total) * 100;
+
+      document.getElementById("masteredBar").style.width = masteredPct + "%";
+      document.getElementById("inProgressBar").style.width = inProgressPct + "%";
+  }
 
   // Looks up the group object (from currentSet.groups) that a card belongs
   // to, or null if it's ungrouped / references a group that no longer exists.
@@ -167,8 +188,43 @@
       currentIndex = 0;
       masteredIds = new Set();
       groupPassProgress = {};
+      inProgressIds = new Set();
+
+      let auth = await checkAuth();
+      isLoggedIn = auth.loggedIn;
+
+      if (isLoggedIn) {
+          let progressResponse = await fetch('/progress/' + sid);
+          let progressData = await progressResponse.json();
+          let savedIds = new Set(progressData.masteredCardIds || []);
+
+          savedIds.forEach(function(id) { masteredIds.add(id); });
+          (progressData.inProgressCardIds || []).forEach(function(id) { inProgressIds.add(id); });
+          queue = queue.filter(function(c) { return !savedIds.has(c._id); });
+
+          if (queue.length === 0) {
+              showCompletion();
+              return;
+          }
+      }
 
       renderCard();
+  }
+
+  // Persists which cards are mastered so Study Mode can resume later.
+  // No-op for guests (nothing to save against).
+  async function saveProgress() {
+      if (!isLoggedIn) return;
+
+      await fetch('/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              setId: currentSet._id,
+              masteredCardIds: [...masteredIds],
+              inProgressCardIds: [...inProgressIds]
+          })
+      });
   }
 
   function hideControls() {
@@ -178,6 +234,7 @@
       document.getElementById("shuffleBtn").classList.add("d-none");
       document.getElementById("settingsBtn").classList.add("d-none");
       document.getElementById("settingsPanel").classList.add("d-none");
+      document.getElementById("progressBar").classList.add("d-none");
   }
 
   function updateProgressLines() {
@@ -225,6 +282,12 @@
       let card = queue[currentIndex];
       let group = cardGroup(card);
       let forceMode = group && group.mode === "forced" ? currentSet.groupForceMode : null;
+      let masteredSizeBefore = masteredIds.size;
+      let inProgressSizeBefore = inProgressIds.size;
+
+      function progressChanged() {
+          return masteredIds.size !== masteredSizeBefore || inProgressIds.size !== inProgressSizeBefore;
+      }
 
       if (forceMode === "allornothing") {
           if (isCorrect) {
@@ -241,7 +304,7 @@
                   // follows it once the block itself is removed.
                   let landingIndex = queue.findIndex(function(c) { return c.group === group.name; });
 
-                  groupCardIds.forEach(function(id) { masteredIds.add(id); });
+                  groupCardIds.forEach(function(id) { masteredIds.add(id); inProgressIds.delete(id); });
                   queue = queue.filter(function(c) { return c.group !== group.name; });
                   delete groupPassProgress[group.name];
 
@@ -253,17 +316,24 @@
               }
           } else {
               delete groupPassProgress[group.name];
+              inProgressIds.add(card._id);
               jumpToGroupMember(group.name);
           }
 
-          if (queue.length === 0) { showCompletion(); return; }
+          if (queue.length === 0) {
+              if (progressChanged()) saveProgress();
+              showCompletion();
+              return;
+          }
           if (currentIndex >= queue.length) currentIndex = queue.length - 1;
       } else if (forceMode === "locked") {
           queue.splice(currentIndex, 1);
 
           if (isCorrect) {
               masteredIds.add(card._id);
+              inProgressIds.delete(card._id);
           } else {
+              inProgressIds.add(card._id);
               // Reinsert at the end of this group's remaining run (not the
               // whole queue) so we keep cycling within the group.
               let lastGroupIndex = -1;
@@ -271,21 +341,32 @@
               queue.splice(lastGroupIndex + 1, 0, card);
           }
 
-          if (queue.length === 0) { showCompletion(); return; }
+          if (queue.length === 0) {
+              if (progressChanged()) saveProgress();
+              showCompletion();
+              return;
+          }
           jumpToGroupMember(group.name);
           if (currentIndex >= queue.length) currentIndex = queue.length - 1;
       } else {
           queue.splice(currentIndex, 1);
           if (isCorrect) {
               masteredIds.add(card._id);
+              inProgressIds.delete(card._id);
           } else {
+              inProgressIds.add(card._id);
               queue.push(card);
           }
 
-          if (queue.length === 0) { showCompletion(); return; }
+          if (queue.length === 0) {
+              if (progressChanged()) saveProgress();
+              showCompletion();
+              return;
+          }
           if (currentIndex >= queue.length) currentIndex = 0;
       }
 
+      if (progressChanged()) saveProgress();
       renderCard();
   }
 
@@ -323,6 +404,7 @@
       document.getElementById("progressLine").textContent = "";
       document.getElementById("masteryLine").textContent = `Mastered ${currentSet.cards.length} of ${currentSet.cards.length}`;
       document.getElementById("completionArea").classList.remove("d-none");
+      renderProgressBar();
   }
 
   document.getElementById("restartBtn").addEventListener("click", function() {
@@ -337,6 +419,8 @@
       currentIndex = 0;
       masteredIds = new Set();
       groupPassProgress = {};
+      inProgressIds = new Set();
+      saveProgress();
       renderCard();
   });
 
@@ -344,6 +428,7 @@
       let card = queue[currentIndex];
 
       updateProgressLines();
+      renderProgressBar();
 
       let groupRun = activeForcedGroupRun();
       if (groupRun) {

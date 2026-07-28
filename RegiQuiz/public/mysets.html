@@ -47,6 +47,13 @@
             You don't have permission to do that.
         </div>
 
+        <div class="d-flex justify-content-end mb-3">
+            <select id="sortSelect" class="form-select form-select-sm" style="max-width:240px">
+                <option value="name">Sort by: Name (A-Z)</option>
+                <option value="category">Sort by: Category</option>
+            </select>
+        </div>
+
         <div class="row" id="setsRow"></div>
     </div>
 
@@ -58,6 +65,24 @@
 <script>
   let lstSets = [];
   let isGuest = true;
+  let progressBySet = {}; // { setId: { mastered, inProgress } }, current user only
+
+  // A set's progress for the current user, or null if there's nothing to
+  // show (guest, or a set with no cards). masteredPct/inProgressPct drive a
+  // single two-color bar (green/orange); any remainder is left unfilled.
+  function setProgress(set) {
+      if (isGuest) return null;
+      let total = (set.cards || []).length;
+      if (total === 0) return null;
+
+      let p = progressBySet[set._id] || { mastered: 0, inProgress: 0 };
+      return {
+          total,
+          sorted: p.mastered + p.inProgress,
+          masteredPct: Math.round((p.mastered / total) * 100),
+          inProgressPct: Math.round((p.inProgress / total) * 100)
+      };
+  }
 
   async function readSetData() {
       showRegiLoader(document.getElementById("setsRow"));
@@ -81,8 +106,36 @@
 
           let response = await fetch('/mysets');
           lstSets = await response.json();
+
+          let progressResponse = await fetch('/progress/mine');
+          progressBySet = await progressResponse.json();
+
+          document.getElementById("sortSelect").insertAdjacentHTML("beforeend", `
+              <option value="completion-desc">Sort by: Completion (High to Low)</option>
+              <option value="completion-asc">Sort by: Completion (Low to High)</option>
+          `);
       }
 
+      renderSets();
+  }
+
+  function sortSets(sortBy) {
+      function masteredPct(set) {
+          let progress = setProgress(set);
+          return progress ? progress.masteredPct : 0;
+      }
+
+      let compare = {
+          name: function(a, b) { return a.name.localeCompare(b.name); },
+          category: function(a, b) { return a.category.localeCompare(b.category); },
+          "completion-desc": function(a, b) { return masteredPct(b) - masteredPct(a); },
+          "completion-asc": function(a, b) { return masteredPct(a) - masteredPct(b); }
+      }[sortBy];
+
+      if (compare) lstSets.sort(compare);
+  }
+
+  function renderSets() {
       if (lstSets.length == 0) {
         document.getElementById("setsRow").innerHTML =
         "<p class='text-center'>No sets have been created yet.</p>";
@@ -91,6 +144,13 @@
       let output = "";
 
       for (let i = 0; i < lstSets.length; i++) {
+        let progress = setProgress(lstSets[i]);
+        let created = new Date(lstSets[i].creation).toLocaleDateString();
+        // Sets created before "last edited" tracking existed have no
+        // updatedAt in the database yet (Mongoose defaults only apply to
+        // newly-created documents) — fall back to the created date.
+        let edited = lstSets[i].updatedAt ? new Date(lstSets[i].updatedAt).toLocaleDateString() : created;
+
         output += `
         <div class="col-md-6 col-lg-4 mb-4">
           <div class="card shadow h-100">
@@ -99,6 +159,14 @@
                 <p><strong>ID:</strong> ${lstSets[i]._id}</p>
                 <p><strong>Category:</strong> ${lstSets[i].category}</p>
                 <p><strong>Description:</strong> ${lstSets[i].description}</p>
+                <p class="text-muted small mb-2">Created: ${created} &middot; Last edited: ${edited}</p>
+                ${progress === null ? '' : `
+                <div class="progress mb-1" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: ${progress.masteredPct}%;"></div>
+                    <div class="progress-bar bg-warning" style="width: ${progress.inProgressPct}%;"></div>
+                </div>
+                <p class="text-muted small mb-2">${progress.sorted}/${progress.total} cards sorted</p>
+                `}
 
                 <a href="studyset.html?id=${lstSets[i]._id}" class="btn btn-success me-2">
                   Study
@@ -130,6 +198,11 @@
     function deleteCheck() {
         return window.confirm("Are you sure you want to delete this set?");
     }
+
+    document.getElementById("sortSelect").addEventListener("change", function(event) {
+        sortSets(event.target.value);
+        renderSets();
+    });
 
     readSetData();
 

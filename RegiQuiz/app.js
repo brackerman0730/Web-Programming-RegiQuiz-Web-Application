@@ -2,6 +2,7 @@ const controller = require("./controllers/setsController");
 const authController = require("./controllers/authController");
 const cardsController = require("./controllers/cardsController");
 const uploadController = require("./controllers/uploadController");
+const progressController = require("./controllers/progressController");
 
 const express = require('express');
 const morgan = require('morgan');
@@ -39,6 +40,12 @@ app.get('/api/whoami', authController.getWhoAmI);
 app.post('/change-password', authController.postChangePassword);
 app.post('/delete-account', authController.postDeleteAccount);
 app.post('/checkcard', cardsController.postCheckCard);
+
+// /progress/mine must be registered before /progress/:setId, otherwise
+// Express would match "mine" as a setId value instead.
+app.get('/progress/mine', progressController.getMine);
+app.get('/progress/:setId', progressController.get);
+app.post('/progress', progressController.postSave);
 
 // Card image upload for term_definition cards. Auth check runs before the
 // multer middleware so a logged-out request never gets its file written to disk.

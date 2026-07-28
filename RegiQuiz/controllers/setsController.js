@@ -85,6 +85,9 @@ exports.postCreateUpdate = async function(req, res) {
     let scategory = req.body.txt_category;
     let sdescription = req.body.txt_description;
     let cards = Array.isArray(req.body.cards) ? req.body.cards : [];
+    let groups = Array.isArray(req.body.groups) ? req.body.groups : [];
+    let defaultGroupMode = req.body.defaultGroupMode === 'forced' ? 'forced' : 'immediate';
+    let groupForceMode = req.body.groupForceMode === 'allornothing' ? 'allornothing' : 'locked';
 
     let cardError = await validateAndDeriveCards(cards);
     if (cardError) {
@@ -105,7 +108,10 @@ exports.postCreateUpdate = async function(req, res) {
             name: sname,
             category: scategory,
             description: sdescription,
-            cards: cards
+            cards: cards,
+            groups: groups,
+            defaultGroupMode: defaultGroupMode,
+            groupForceMode: groupForceMode
         };
 
         await dao.update(updatedSet);
@@ -118,7 +124,10 @@ exports.postCreateUpdate = async function(req, res) {
         category: scategory,
         description: sdescription,
         owner: req.session.userId,
-        cards: cards
+        cards: cards,
+        groups: groups,
+        defaultGroupMode: defaultGroupMode,
+        groupForceMode: groupForceMode
     };
 
     let created = await dao.create(newSet);

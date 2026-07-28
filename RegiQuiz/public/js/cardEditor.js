@@ -8,6 +8,20 @@ const LANGUAGE_HELP = {
     html: 'Plain HTML markup — no boilerplate needed. Not compiled or run; checked by comparing text directly.'
 };
 
+// Current { name, mode } list for the set being edited, kept in sync by
+// initGroupUi. Card rows read this to populate their own Group dropdown.
+let knownGroups = [];
+
+// Rebuilds a single card row's Group dropdown from knownGroups, keeping
+// selectedName selected if it's still a real group (falls back to "No Group").
+function populateGroupSelect(select, selectedName) {
+    let stillValid = knownGroups.some(function(g) { return g.name === selectedName; });
+    select.innerHTML = '<option value="">No Group</option>' + knownGroups.map(function(g) {
+        return `<option value="${g.name}">${g.name}</option>`;
+    }).join('');
+    select.value = stillValid ? selectedName : "";
+}
+
 function cardRowTemplate() {
     return `
       <div class="card-row card p-3 mb-3">
@@ -17,6 +31,13 @@ function cardRowTemplate() {
                 <option value="term_definition">Term &amp; Definition</option>
                 <option value="math">Math</option>
                 <option value="code">Code</option>
+            </select>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Group (optional)</label>
+            <select class="form-select groupSelect">
+                <option value="">No Group</option>
             </select>
         </div>
 
@@ -179,6 +200,8 @@ function wireCardRow(row) {
     languageSelect.addEventListener("change", updateLanguageHelp);
     updateLanguageHelp();
 
+    populateGroupSelect(row.querySelector(".groupSelect"), "");
+
     let termImageCtl = wireImageUpload(row, "term");
     let definitionImageCtl = wireImageUpload(row, "definition");
 
@@ -219,6 +242,8 @@ function addCardRow(container, existingCard) {
         typeSelect.value = existingCard.type;
         typeSelect.dispatchEvent(new Event("change"));
 
+        populateGroupSelect(row.querySelector(".groupSelect"), existingCard.group || "");
+
         if (existingCard.type === "term_definition") {
             row.querySelector(".termInput").value = existingCard.term || "";
             row.querySelector(".definitionInput").value = existingCard.definition || "";
@@ -246,10 +271,12 @@ function addCardRow(container, existingCard) {
 function collectCards(container) {
     return [...container.querySelectorAll(".card-row")].map(function(row) {
         let type = row.querySelector(".cardType").value;
+        let group = row.querySelector(".groupSelect").value;
 
         if (type === "term_definition") {
             return {
                 type,
+                group,
                 term: row.querySelector(".termInput").value,
                 definition: row.querySelector(".definitionInput").value,
                 frontSide: row.querySelector(".frontSideSelect").value,
@@ -261,6 +288,7 @@ function collectCards(container) {
         if (type === "math") {
             return {
                 type,
+                group,
                 question: row.querySelector(".mathQuestion").value,
                 correctAnswerExpr: row.querySelector(".mathAnswer").value
             };
@@ -268,6 +296,7 @@ function collectCards(container) {
 
         return {
             type,
+            group,
             question: row.querySelector(".codeQuestion").value,
             codeTemplate: row.querySelector(".codeTemplate").value,
             correctFill: row.querySelector(".codeFill").value,
@@ -393,4 +422,142 @@ function initImportUi(importContainer, cardsContainer) {
         status.textContent = "Imported " + pairs.length + " card" + (pairs.length === 1 ? "" : "s") + ".";
         textarea.value = "";
     });
+}
+
+// ---- Groups ----
+// Lets the set owner group cards (of any type) into named sections. In Study
+// Mode, Shuffle keeps a group's cards in order relative to one another, and
+// a group can be set to "Force finish" so the student can't move past it
+// until every card in it is answered correctly (see studyset.html).
+
+function groupUiTemplate() {
+    return `
+      <div class="card p-3 mb-3 bg-body-tertiary">
+        <h6 class="mb-2">Groups</h6>
+        <p class="form-text mt-0 mb-2">
+            Group cards of any type into named sections. Shuffle keeps a group's cards in order
+            relative to one another. A group can also force the student to finish it before moving on.
+        </p>
+        <div class="row g-2 mb-3">
+            <div class="col-12 col-sm-6">
+                <label class="form-label small mb-1">New groups default to</label>
+                <select class="form-select form-select-sm" id="defaultGroupMode">
+                    <option value="immediate" selected>Flag correct answers as done immediately</option>
+                    <option value="forced">Force finish before continuing</option>
+                </select>
+            </div>
+            <div class="col-12 col-sm-6">
+                <label class="form-label small mb-1">"Force finish" behavior</label>
+                <select class="form-select form-select-sm" id="groupForceMode">
+                    <option value="locked" selected>Locked navigation (right answers still count individually)</option>
+                    <option value="allornothing">All-or-nothing (any wrong answer resets the group's progress)</option>
+                </select>
+            </div>
+        </div>
+        <div id="groupList" class="mb-2"></div>
+        <div class="d-flex align-items-center gap-2">
+            <input type="text" class="form-control form-control-sm" id="newGroupName" placeholder="New group name" style="max-width:220px">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="addGroupBtn">+ Add Group</button>
+        </div>
+        <div class="form-text" id="groupStatus"></div>
+      </div>
+    `;
+}
+
+function groupRowTemplate(group) {
+    return `
+      <div class="d-flex align-items-center gap-2 mb-2 group-row" data-group-name="${group.name}">
+          <span class="fw-semibold" style="min-width:140px">${group.name}</span>
+          <select class="form-select form-select-sm groupModeSelect" style="max-width:280px">
+              <option value="immediate">Flag correct answers as done immediately</option>
+              <option value="forced">Force finish before continuing</option>
+          </select>
+          <button type="button" class="btn btn-outline-danger btn-sm removeGroupBtn">Remove</button>
+      </div>
+    `;
+}
+
+// Injects the Groups panel into groupContainer. Returns a small controller
+// used by the page to hydrate existing data (editset.html) and to read the
+// final groups/settings back out at submit time.
+function initGroupUi(groupContainer, cardsContainer) {
+    groupContainer.insertAdjacentHTML("beforeend", groupUiTemplate());
+
+    let groups = []; // { name, mode }
+    let groupList = document.getElementById("groupList");
+    let defaultModeSelect = document.getElementById("defaultGroupMode");
+    let forceModeSelect = document.getElementById("groupForceMode");
+    let newNameInput = document.getElementById("newGroupName");
+    let status = document.getElementById("groupStatus");
+
+    function refreshCardGroupDropdowns() {
+        knownGroups = groups;
+        cardsContainer.querySelectorAll(".groupSelect").forEach(function(select) {
+            populateGroupSelect(select, select.value);
+        });
+    }
+
+    function renderGroupList() {
+        groupList.innerHTML = groups.map(groupRowTemplate).join("");
+
+        groupList.querySelectorAll(".group-row").forEach(function(row) {
+            let name = row.dataset.groupName;
+            let group = groups.find(function(g) { return g.name === name; });
+
+            let modeSelect = row.querySelector(".groupModeSelect");
+            modeSelect.value = group.mode;
+            modeSelect.addEventListener("change", function() {
+                group.mode = modeSelect.value;
+            });
+
+            row.querySelector(".removeGroupBtn").addEventListener("click", function() {
+                groups = groups.filter(function(g) { return g.name !== name; });
+                renderGroupList();
+                refreshCardGroupDropdowns();
+            });
+        });
+    }
+
+    document.getElementById("addGroupBtn").addEventListener("click", function() {
+        let name = newNameInput.value.trim();
+
+        if (!name) {
+            status.textContent = "Enter a group name first.";
+            return;
+        }
+        if (groups.some(function(g) { return g.name === name; })) {
+            status.textContent = "A group with that name already exists.";
+            return;
+        }
+
+        groups.push({ name, mode: defaultModeSelect.value });
+        newNameInput.value = "";
+        status.textContent = "";
+        renderGroupList();
+        refreshCardGroupDropdowns();
+    });
+
+    refreshCardGroupDropdowns();
+
+    return {
+        // Replaces the current groups/settings wholesale (used to load an existing set).
+        setGroups: function(existingGroups, settings) {
+            groups = (existingGroups || []).map(function(g) {
+                return { name: g.name, mode: g.mode || "immediate" };
+            });
+            defaultModeSelect.value = (settings && settings.defaultGroupMode) || "immediate";
+            forceModeSelect.value = (settings && settings.groupForceMode) || "locked";
+            renderGroupList();
+            refreshCardGroupDropdowns();
+        },
+        getGroups: function() {
+            return groups;
+        },
+        getSettings: function() {
+            return {
+                defaultGroupMode: defaultModeSelect.value,
+                groupForceMode: forceModeSelect.value
+            };
+        }
+    };
 }

@@ -103,6 +103,7 @@
                     <hr class="my-4">
 
                     <h4 class="mb-3">Cards</h4>
+                    <div id="groupContainer"></div>
                     <div id="importContainer"></div>
                     <div id="cardsContainer"></div>
 
@@ -132,6 +133,8 @@
 <script src="js/theme.js"></script>
 <script src="js/cardEditor.js"></script>
 <script>
+  let groupUi;
+
   function getSetIdFromUrl(){
     let params = new URLSearchParams(window.location.search);
     return params.get("id");
@@ -149,6 +152,13 @@
     document.getElementById("txt_category").value = set.category;
 
     let cardsContainer = document.getElementById("cardsContainer");
+
+    groupUi = initGroupUi(document.getElementById("groupContainer"), cardsContainer);
+    groupUi.setGroups(set.groups || [], {
+        defaultGroupMode: set.defaultGroupMode || "immediate",
+        groupForceMode: set.groupForceMode || "locked"
+    });
+
     (set.cards || []).forEach(function(card) {
         addCardRow(cardsContainer, card);
     });
@@ -162,6 +172,9 @@
         document.getElementById("saveBtn").disabled = true;
         document.getElementById("addCardBtn").disabled = true;
         document.getElementById("importTextBtn").disabled = true;
+        document.getElementById("addGroupBtn").disabled = true;
+        document.getElementById("defaultGroupMode").disabled = true;
+        document.getElementById("groupForceMode").disabled = true;
         document.getElementById("forbiddenAlert").classList.remove("d-none");
     }
   }
@@ -183,6 +196,7 @@
       document.getElementById("editErrorAlert").classList.add("d-none");
 
       let cards = collectCards(document.getElementById("cardsContainer"));
+      let groupSettings = groupUi.getSettings();
 
       let response = await fetch('/updateset', {
           method: 'POST',
@@ -192,7 +206,10 @@
               txt_name: document.getElementById("txt_name").value,
               txt_category: document.getElementById("txt_category").value,
               txt_description: document.getElementById("txt_description").value,
-              cards: cards
+              cards: cards,
+              groups: groupUi.getGroups(),
+              defaultGroupMode: groupSettings.defaultGroupMode,
+              groupForceMode: groupSettings.groupForceMode
           })
       });
 

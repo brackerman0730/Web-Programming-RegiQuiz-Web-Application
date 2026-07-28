@@ -43,10 +43,29 @@
               <p class="text-center text-muted mb-1" id="progressLine"></p>
               <p class="text-center text-muted" id="masteryLine"></p>
 
-              <div class="text-center mb-3">
+              <div class="text-center mb-3 d-flex justify-content-center gap-2">
                   <button id="shuffleBtn" class="btn btn-outline-secondary btn-sm">
                       Shuffle
                   </button>
+                  <button id="settingsBtn" class="btn btn-outline-secondary btn-sm">
+                      &#9881; Settings
+                  </button>
+              </div>
+
+              <div id="settingsPanel" class="card p-3 mb-3 d-none">
+                  <p class="form-text mt-0 mb-2">Which side shows first for Term &amp; Definition cards?</p>
+                  <div class="form-check">
+                      <input class="form-check-input" type="radio" name="frontOverride" id="frontOverrideCard" value="card" checked>
+                      <label class="form-check-label" for="frontOverrideCard">Use each card's own setting</label>
+                  </div>
+                  <div class="form-check">
+                      <input class="form-check-input" type="radio" name="frontOverride" id="frontOverrideTerm" value="term">
+                      <label class="form-check-label" for="frontOverrideTerm">Always show term first</label>
+                  </div>
+                  <div class="form-check">
+                      <input class="form-check-input" type="radio" name="frontOverride" id="frontOverrideDefinition" value="definition">
+                      <label class="form-check-label" for="frontOverrideDefinition">Always show definition first</label>
+                  </div>
               </div>
 
               <div id="noCardsAlert" class="alert alert-secondary text-center d-none" role="alert">
@@ -79,6 +98,8 @@
   let queue = [];
   let currentIndex = 0;
   let masteredIds = new Set();
+  // null = use each card's own frontSide; "term"/"definition" = override every card for this session
+  let sessionFrontOverride = null;
 
   function getSetIdFromUrl() {
       let params = new URLSearchParams(window.location.search);
@@ -118,6 +139,8 @@
       document.getElementById("prevBtn").classList.add("d-none");
       document.getElementById("nextBtn").classList.add("d-none");
       document.getElementById("shuffleBtn").classList.add("d-none");
+      document.getElementById("settingsBtn").classList.add("d-none");
+      document.getElementById("settingsPanel").classList.add("d-none");
   }
 
   function updateProgressLines() {
@@ -185,6 +208,8 @@
       document.getElementById("prevBtn").classList.add("d-none");
       document.getElementById("nextBtn").classList.add("d-none");
       document.getElementById("shuffleBtn").classList.add("d-none");
+      document.getElementById("settingsBtn").classList.add("d-none");
+      document.getElementById("settingsPanel").classList.add("d-none");
       document.getElementById("progressLine").textContent = "";
       document.getElementById("masteryLine").textContent = `Mastered ${currentSet.cards.length} of ${currentSet.cards.length}`;
       document.getElementById("completionArea").classList.remove("d-none");
@@ -196,6 +221,7 @@
       document.getElementById("prevBtn").classList.remove("d-none");
       document.getElementById("nextBtn").classList.remove("d-none");
       document.getElementById("shuffleBtn").classList.remove("d-none");
+      document.getElementById("settingsBtn").classList.remove("d-none");
 
       queue = [...currentSet.cards];
       currentIndex = 0;
@@ -213,17 +239,27 @@
       let cardArea = document.getElementById("cardArea");
 
       if (card.type === "term_definition") {
+          let frontSide = sessionFrontOverride || card.frontSide || "term";
+          let frontText = frontSide === "definition" ? card.definition : card.term;
+          let backText = frontSide === "definition" ? card.term : card.definition;
+          let frontImage = frontSide === "definition" ? card.definitionImage : card.termImage;
+          let backImage = frontSide === "definition" ? card.termImage : card.definitionImage;
+
           cardArea.innerHTML = `
-              <h3 class="mb-3">${card.term}</h3>
+              <h3 class="mb-3">${frontText}</h3>
+              ${frontImage ? `<img src="${frontImage}" class="img-fluid rounded mb-3" style="max-height:300px">` : ''}
               <button id="revealBtn" class="btn btn-secondary mb-3">Reveal Answer</button>
-              <p id="definitionText" class="d-none fs-5">${card.definition}</p>
+              <div id="backContent" class="d-none">
+                  <p class="fs-5">${backText}</p>
+                  ${backImage ? `<img src="${backImage}" class="img-fluid rounded mb-3" style="max-height:300px">` : ''}
+              </div>
               <div id="selfReportButtons" class="d-none">
                   <button id="rightBtn" class="btn btn-success me-2">Got it Right</button>
                   <button id="wrongBtn" class="btn btn-danger">Got it Wrong</button>
               </div>
           `;
           document.getElementById("revealBtn").addEventListener("click", function() {
-              document.getElementById("definitionText").classList.remove("d-none");
+              document.getElementById("backContent").classList.remove("d-none");
               document.getElementById("selfReportButtons").classList.remove("d-none");
           });
           document.getElementById("rightBtn").addEventListener("click", function() {
@@ -319,6 +355,17 @@
   document.getElementById("shuffleBtn").addEventListener("click", function() {
       shuffleQueue();
       renderCard();
+  });
+
+  document.getElementById("settingsBtn").addEventListener("click", function() {
+      document.getElementById("settingsPanel").classList.toggle("d-none");
+  });
+
+  document.querySelectorAll('input[name="frontOverride"]').forEach(function(radio) {
+      radio.addEventListener("change", function() {
+          sessionFrontOverride = radio.value === "card" ? null : radio.value;
+          renderCard();
+      });
   });
 
   loadSet();

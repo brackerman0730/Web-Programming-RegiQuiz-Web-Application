@@ -104,6 +104,7 @@
                   <hr class="my-4">
 
                   <h4 class="mb-3">Cards</h4>
+                  <div id="importContainer"></div>
                   <div id="cardsContainer"></div>
 
                   <div class="d-grid mb-4">
@@ -143,6 +144,8 @@
   }
 
   checkCreateAccess();
+
+  initImportUi(document.getElementById("importContainer"), document.getElementById("cardsContainer"));
 
   document.getElementById("addCardBtn").addEventListener("click", function() {
       addCardRow(document.getElementById("cardsContainer"));

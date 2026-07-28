@@ -103,6 +103,7 @@
                     <hr class="my-4">
 
                     <h4 class="mb-3">Cards</h4>
+                    <div id="importContainer"></div>
                     <div id="cardsContainer"></div>
 
                     <div class="d-grid mb-4">
@@ -152,12 +153,15 @@
         addCardRow(cardsContainer, card);
     });
 
+    initImportUi(document.getElementById("importContainer"), cardsContainer);
+
     let auth = await checkAuth();
     let isOwner = auth.loggedIn && set.owner && String(set.owner) === auth.userId;
 
     if (!isOwner) {
         document.getElementById("saveBtn").disabled = true;
         document.getElementById("addCardBtn").disabled = true;
+        document.getElementById("importTextBtn").disabled = true;
         document.getElementById("forbiddenAlert").classList.remove("d-none");
     }
   }

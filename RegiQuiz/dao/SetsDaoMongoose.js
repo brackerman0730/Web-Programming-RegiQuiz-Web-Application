@@ -6,6 +6,9 @@ const cardSchema = new mongoose.Schema({
     // term_definition
     term: String,
     definition: String,
+    frontSide: { type: String, enum: ['term', 'definition'], default: 'term' },
+    termImage: String,
+    definitionImage: String,
 
     // math
     question: String,

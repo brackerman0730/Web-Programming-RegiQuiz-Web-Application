@@ -24,10 +24,34 @@ function cardRowTemplate() {
             <div class="mb-2">
                 <label class="form-label">Term</label>
                 <input type="text" class="form-control termInput">
+                <input type="hidden" class="termImageUrl">
+                <img class="termImagePreview img-thumbnail mt-2 d-none" style="max-height:120px" alt="Term image">
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <input type="file" accept="image/*" class="form-control form-control-sm termImageInput" style="max-width:220px">
+                    <button type="button" class="btn btn-outline-danger btn-sm termRemoveImageBtn d-none">Remove Image</button>
+                </div>
+                <div class="form-text termImageStatus"></div>
             </div>
             <div class="mb-2">
                 <label class="form-label">Definition</label>
                 <input type="text" class="form-control definitionInput">
+                <input type="hidden" class="definitionImageUrl">
+                <img class="definitionImagePreview img-thumbnail mt-2 d-none" style="max-height:120px" alt="Definition image">
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <input type="file" accept="image/*" class="form-control form-control-sm definitionImageInput" style="max-width:220px">
+                    <button type="button" class="btn btn-outline-danger btn-sm definitionRemoveImageBtn d-none">Remove Image</button>
+                </div>
+                <div class="form-text definitionImageStatus"></div>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Show first in Study Mode</label>
+                <select class="form-select frontSideSelect">
+                    <option value="term" selected>Term</option>
+                    <option value="definition">Definition</option>
+                </select>
+            </div>
+            <div class="mb-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm swapTermDefBtn">Swap Term &harr; Definition</button>
             </div>
         </div>
 
@@ -78,6 +102,59 @@ function cardRowTemplate() {
     `;
 }
 
+// Wires a term or definition image slot (prefix "term" or "definition"):
+// uploads the picked file immediately via /upload/card-image, shows a
+// thumbnail preview, and supports clearing it. Returns the hidden url input
+// and a showPreview helper so callers (prefill, swap) can drive it directly.
+function wireImageUpload(row, prefix) {
+    let fileInput = row.querySelector("." + prefix + "ImageInput");
+    let urlInput = row.querySelector("." + prefix + "ImageUrl");
+    let preview = row.querySelector("." + prefix + "ImagePreview");
+    let removeBtn = row.querySelector("." + prefix + "RemoveImageBtn");
+    let status = row.querySelector("." + prefix + "ImageStatus");
+
+    function showPreview(url) {
+        if (url) {
+            preview.src = url;
+            preview.classList.remove("d-none");
+            removeBtn.classList.remove("d-none");
+        } else {
+            preview.src = "";
+            preview.classList.add("d-none");
+            removeBtn.classList.add("d-none");
+        }
+    }
+
+    fileInput.addEventListener("change", async function() {
+        let file = fileInput.files[0];
+        if (!file) return;
+
+        status.textContent = "Uploading...";
+
+        let formData = new FormData();
+        formData.append("image", file);
+
+        let response = await fetch("/upload/card-image", { method: "POST", body: formData });
+        let data = await response.json();
+
+        if (response.ok) {
+            urlInput.value = data.url;
+            showPreview(data.url);
+            status.textContent = "";
+        } else {
+            status.textContent = data.msg || "Upload failed.";
+        }
+        fileInput.value = "";
+    });
+
+    removeBtn.addEventListener("click", function() {
+        urlInput.value = "";
+        showPreview(null);
+    });
+
+    return { urlInput, showPreview };
+}
+
 function wireCardRow(row) {
     let typeSelect = row.querySelector(".cardType");
     let termdefFields = row.querySelector(".fields-termdef");
@@ -102,9 +179,32 @@ function wireCardRow(row) {
     languageSelect.addEventListener("change", updateLanguageHelp);
     updateLanguageHelp();
 
+    let termImageCtl = wireImageUpload(row, "term");
+    let definitionImageCtl = wireImageUpload(row, "definition");
+
+    // Swaps term <-> definition text and images together, so an image never
+    // gets separated from the text it belongs with. Independent of the
+    // "Show first in Study Mode" setting, which only affects display order.
+    row.querySelector(".swapTermDefBtn").addEventListener("click", function() {
+        let termInput = row.querySelector(".termInput");
+        let definitionInput = row.querySelector(".definitionInput");
+        let termText = termInput.value;
+        termInput.value = definitionInput.value;
+        definitionInput.value = termText;
+
+        let termImageUrl = termImageCtl.urlInput.value;
+        let definitionImageUrl = definitionImageCtl.urlInput.value;
+        termImageCtl.urlInput.value = definitionImageUrl;
+        termImageCtl.showPreview(definitionImageUrl);
+        definitionImageCtl.urlInput.value = termImageUrl;
+        definitionImageCtl.showPreview(termImageUrl);
+    });
+
     row.querySelector(".removeCardBtn").addEventListener("click", function() {
         row.remove();
     });
+
+    return { termImageCtl, definitionImageCtl };
 }
 
 // Appends a new card row to container. If existingCard is given, pre-fills
@@ -112,7 +212,7 @@ function wireCardRow(row) {
 function addCardRow(container, existingCard) {
     container.insertAdjacentHTML("beforeend", cardRowTemplate());
     let row = container.lastElementChild;
-    wireCardRow(row);
+    let imageCtls = wireCardRow(row);
 
     if (existingCard) {
         let typeSelect = row.querySelector(".cardType");
@@ -122,6 +222,11 @@ function addCardRow(container, existingCard) {
         if (existingCard.type === "term_definition") {
             row.querySelector(".termInput").value = existingCard.term || "";
             row.querySelector(".definitionInput").value = existingCard.definition || "";
+            row.querySelector(".frontSideSelect").value = existingCard.frontSide || "term";
+            imageCtls.termImageCtl.urlInput.value = existingCard.termImage || "";
+            imageCtls.termImageCtl.showPreview(existingCard.termImage || null);
+            imageCtls.definitionImageCtl.urlInput.value = existingCard.definitionImage || "";
+            imageCtls.definitionImageCtl.showPreview(existingCard.definitionImage || null);
         } else if (existingCard.type === "math") {
             row.querySelector(".mathQuestion").value = existingCard.question || "";
             row.querySelector(".mathAnswer").value = existingCard.correctAnswerExpr || "";
@@ -146,7 +251,10 @@ function collectCards(container) {
             return {
                 type,
                 term: row.querySelector(".termInput").value,
-                definition: row.querySelector(".definitionInput").value
+                definition: row.querySelector(".definitionInput").value,
+                frontSide: row.querySelector(".frontSideSelect").value,
+                termImage: row.querySelector(".termImageUrl").value,
+                definitionImage: row.querySelector(".definitionImageUrl").value
             };
         }
 
@@ -165,5 +273,124 @@ function collectCards(container) {
             correctFill: row.querySelector(".codeFill").value,
             language: row.querySelector(".codeLanguage").value
         };
+    });
+}
+
+// ---- Import Cards from Text ----
+// Lets the user paste a block of term/definition pairs (e.g. a Quizlet
+// export) instead of adding cards one at a time. Defaults match Quizlet's
+// own "Export" format: a tab between term and definition, a new line
+// between cards.
+
+const IMPORT_SEP_PRESETS = {
+    tab: "\t",
+    newline: "\n"
+};
+
+function resolveImportSeparator(select, customInput) {
+    if (select.value === "custom") return customInput.value;
+    return IMPORT_SEP_PRESETS[select.value] !== undefined ? IMPORT_SEP_PRESETS[select.value] : select.value;
+}
+
+function importUiTemplate() {
+    return `
+      <div class="card p-3 mb-3 bg-body-tertiary">
+        <h6 class="mb-2">Import Cards from Text</h6>
+        <p class="form-text mt-0 mb-2">
+            Paste term/definition pairs below to add several Term &amp; Definition cards at once.
+            Works great with Quizlet's own export (open a set &rarr; &#8942; menu &rarr; Export &rarr; Copy text &rarr; paste here) &mdash; the defaults below already match it.
+        </p>
+        <div class="row g-2 mb-2">
+            <div class="col-6 col-sm-4">
+                <label class="form-label small mb-1">Between term &amp; definition</label>
+                <select class="form-select form-select-sm" id="importTermDefSep">
+                    <option value="tab" selected>Tab</option>
+                    <option value=",">Comma (,)</option>
+                    <option value="-">Dash (-)</option>
+                    <option value=":">Colon (:)</option>
+                    <option value="custom">Custom...</option>
+                </select>
+                <input type="text" class="form-control form-control-sm mt-1 d-none" id="importTermDefCustom" placeholder="custom separator">
+            </div>
+            <div class="col-6 col-sm-4">
+                <label class="form-label small mb-1">Between cards</label>
+                <select class="form-select form-select-sm" id="importCardSep">
+                    <option value="newline" selected>New line</option>
+                    <option value=";">Semicolon (;)</option>
+                    <option value="custom">Custom...</option>
+                </select>
+                <input type="text" class="form-control form-control-sm mt-1 d-none" id="importCardCustom" placeholder="custom separator">
+            </div>
+        </div>
+        <textarea class="form-control mb-2" id="importTextarea" rows="6" placeholder="term[TAB]definition, one pair per line"></textarea>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="importTextBtn">Import Cards</button>
+            <span class="form-text mb-0" id="importStatus"></span>
+        </div>
+      </div>
+    `;
+}
+
+// Splits raw import text into {term, definition} pairs. Cards are separated
+// by cardSep, and within each card the first occurrence of termDefSep splits
+// term from definition. Blank or unparseable chunks are skipped.
+function parseImportText(text, termDefSep, cardSep) {
+    let chunks = cardSep ? text.split(cardSep) : [text];
+
+    return chunks
+        .map(function(chunk) { return chunk.trim(); })
+        .filter(function(chunk) { return chunk.length > 0; })
+        .map(function(chunk) {
+            let idx = chunk.indexOf(termDefSep);
+            if (idx === -1) return null;
+            return {
+                term: chunk.slice(0, idx).trim(),
+                definition: chunk.slice(idx + termDefSep.length).trim()
+            };
+        })
+        .filter(function(pair) { return pair && pair.term && pair.definition; });
+}
+
+// Injects the import panel into importContainer and wires its Import button
+// to append parsed term_definition cards onto cardsContainer via addCardRow.
+function initImportUi(importContainer, cardsContainer) {
+    importContainer.insertAdjacentHTML("beforeend", importUiTemplate());
+
+    let termDefSelect = document.getElementById("importTermDefSep");
+    let termDefCustom = document.getElementById("importTermDefCustom");
+    let cardSelect = document.getElementById("importCardSep");
+    let cardCustom = document.getElementById("importCardCustom");
+    let textarea = document.getElementById("importTextarea");
+    let status = document.getElementById("importStatus");
+
+    termDefSelect.addEventListener("change", function() {
+        termDefCustom.classList.toggle("d-none", termDefSelect.value !== "custom");
+    });
+    cardSelect.addEventListener("change", function() {
+        cardCustom.classList.toggle("d-none", cardSelect.value !== "custom");
+    });
+
+    document.getElementById("importTextBtn").addEventListener("click", function() {
+        let termDefSep = resolveImportSeparator(termDefSelect, termDefCustom);
+        let cardSep = resolveImportSeparator(cardSelect, cardCustom);
+
+        if (!termDefSep) {
+            status.textContent = "Enter a term/definition separator first.";
+            return;
+        }
+
+        let pairs = parseImportText(textarea.value, termDefSep, cardSep);
+
+        if (pairs.length === 0) {
+            status.textContent = "No cards found — check your separators.";
+            return;
+        }
+
+        pairs.forEach(function(pair) {
+            addCardRow(cardsContainer, { type: "term_definition", term: pair.term, definition: pair.definition });
+        });
+
+        status.textContent = "Imported " + pairs.length + " card" + (pairs.length === 1 ? "" : "s") + ".";
+        textarea.value = "";
     });
 }

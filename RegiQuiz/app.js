@@ -1,6 +1,7 @@
 const controller = require("./controllers/setsController");
 const authController = require("./controllers/authController");
 const cardsController = require("./controllers/cardsController");
+const uploadController = require("./controllers/uploadController");
 
 const express = require('express');
 const morgan = require('morgan');
@@ -38,5 +39,17 @@ app.get('/api/whoami', authController.getWhoAmI);
 app.post('/change-password', authController.postChangePassword);
 app.post('/delete-account', authController.postDeleteAccount);
 app.post('/checkcard', cardsController.postCheckCard);
+
+// Card image upload for term_definition cards. Auth check runs before the
+// multer middleware so a logged-out request never gets its file written to disk.
+app.post('/upload/card-image', uploadController.requireLogin, function(req, res) {
+    uploadController.uploadMiddleware(req, res, function(err) {
+        if (err) {
+            res.status(400).send({ msg: err.message });
+            return;
+        }
+        uploadController.postCardImage(req, res);
+    });
+});
 
 exports.app = app;

@@ -270,6 +270,7 @@
       let hadWrongAttempt = false;
       let displayTemplate = card.codeTemplate.split('___BLANK___').join('<mark>___BLANK___</mark>');
       cardArea.innerHTML = `
+          <span class="badge bg-secondary mb-2">${card.language || 'java'}</span>
           <p class="mb-2">${card.question}</p>
           <pre class="bg-light p-3 border rounded"><code>${displayTemplate}</code></pre>
           <div class="mb-3">

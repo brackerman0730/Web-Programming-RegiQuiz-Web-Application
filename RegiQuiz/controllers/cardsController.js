@@ -1,6 +1,10 @@
 const dao = require('../dao/SetsDaoMongoose');
 const { evaluate } = require('mathjs');
-const javaRunner = require('../services/javaRunner');
+const codeRunner = require('../services/codeRunner');
+
+function normalizeText(s) {
+    return (s || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
 
 exports.postCheckCard = async function(req, res) {
     let setId = req.body.setId;
@@ -33,7 +37,22 @@ exports.postCheckCard = async function(req, res) {
     }
 
     if (card.type === 'code') {
-        let result = await javaRunner.runTemplate(card.codeTemplate, answer);
+        let language = card.language || 'java';
+
+        if (language === 'html') {
+            let correct = normalizeText(answer) === normalizeText(card.correctFill);
+            res.send({
+                correct,
+                stdout: answer,
+                stderr: '',
+                compileError: null,
+                timedOut: false,
+                expectedOutput: card.correctFill
+            });
+            return;
+        }
+
+        let result = await codeRunner.runTemplate(language, card.codeTemplate, answer);
         let correct = result.success && result.stdout.trim() === card.expectedOutput.trim();
         res.send({
             correct,

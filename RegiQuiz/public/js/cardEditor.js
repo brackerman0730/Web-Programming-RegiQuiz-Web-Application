@@ -1,3 +1,13 @@
+const LANGUAGE_HELP = {
+    java: 'Must be a complete Java program with a class named Main.',
+    python: 'Must be a runnable Python script — no special function or class required.',
+    javascript: 'Must be a runnable JavaScript (Node.js) script — no special function or class required.',
+    c: 'Must be a complete C program with a main() function.',
+    cpp: 'Must be a complete C++ program with a main() function.',
+    csharp: 'Must be a complete C# program with a class containing a Main method.',
+    html: 'Plain HTML markup — no boilerplate needed. Not compiled or run; checked by comparing text directly.'
+};
+
 function cardRowTemplate() {
     return `
       <div class="card-row card p-3 mb-3">
@@ -38,8 +48,21 @@ function cardRowTemplate() {
                 <textarea class="form-control codeQuestion"></textarea>
             </div>
             <div class="mb-2">
+                <label class="form-label">Language</label>
+                <select class="form-select codeLanguage">
+                    <option value="java">Java</option>
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="c">C</option>
+                    <option value="cpp">C++</option>
+                    <option value="csharp">C#</option>
+                    <option value="html">HTML</option>
+                </select>
+            </div>
+            <div class="mb-2">
                 <label class="form-label">Code Template</label>
-                <div class="form-text">Must be a complete Java program with a class named <code>Main</code>, containing the blank marker <code>___BLANK___</code> at least once.</div>
+                <div class="form-text codeLanguageHelp"></div>
+                <div class="form-text">Must contain the blank marker <code>___BLANK___</code> at least once.</div>
                 <textarea class="form-control codeTemplate font-monospace" rows="8"></textarea>
             </div>
             <div class="mb-2">
@@ -71,6 +94,14 @@ function wireCardRow(row) {
         if (typeSelect.value === "code") codeFields.classList.remove("d-none");
     });
 
+    let languageSelect = row.querySelector(".codeLanguage");
+    let languageHelp = row.querySelector(".codeLanguageHelp");
+    function updateLanguageHelp() {
+        languageHelp.textContent = LANGUAGE_HELP[languageSelect.value] || LANGUAGE_HELP.java;
+    }
+    languageSelect.addEventListener("change", updateLanguageHelp);
+    updateLanguageHelp();
+
     row.querySelector(".removeCardBtn").addEventListener("click", function() {
         row.remove();
     });
@@ -98,6 +129,8 @@ function addCardRow(container, existingCard) {
             row.querySelector(".codeQuestion").value = existingCard.question || "";
             row.querySelector(".codeTemplate").value = existingCard.codeTemplate || "";
             row.querySelector(".codeFill").value = existingCard.correctFill || "";
+            row.querySelector(".codeLanguage").value = existingCard.language || "java";
+            row.querySelector(".codeLanguage").dispatchEvent(new Event("change"));
         }
     }
 
@@ -129,7 +162,8 @@ function collectCards(container) {
             type,
             question: row.querySelector(".codeQuestion").value,
             codeTemplate: row.querySelector(".codeTemplate").value,
-            correctFill: row.querySelector(".codeFill").value
+            correctFill: row.querySelector(".codeFill").value,
+            language: row.querySelector(".codeLanguage").value
         };
     });
 }

@@ -1,6 +1,6 @@
 const dao = require('../dao/SetsDaoMongoose');
 const { evaluate } = require('mathjs');
-const javaRunner = require('../services/javaRunner');
+const codeRunner = require('../services/codeRunner');
 
 exports.getAll = async function(req, res) {
     res.status(200);
@@ -52,15 +52,19 @@ async function validateAndDeriveCards(cards) {
             }
             c.correctAnswerValue = v;
         } else if (c.type === 'code') {
-            if (!c.codeTemplate || !c.codeTemplate.includes(javaRunner.BLANK_TOKEN) || !c.correctFill) {
-                return { msg: `Card ${i + 1}: template must contain ${javaRunner.BLANK_TOKEN} and have a correct fill-in.` };
+            if (!c.codeTemplate || !c.codeTemplate.includes(codeRunner.BLANK_TOKEN) || !c.correctFill) {
+                return { msg: `Card ${i + 1}: template must contain ${codeRunner.BLANK_TOKEN} and have a correct fill-in.` };
             }
 
-            let result = await javaRunner.runTemplate(c.codeTemplate, c.correctFill);
-            if (!result.success) {
-                return { msg: `Card ${i + 1}: your correct answer doesn't compile/run.`, detail: result.compileError || result.stderr };
+            let language = c.language || 'java';
+
+            if (language !== 'html') {
+                let result = await codeRunner.runTemplate(language, c.codeTemplate, c.correctFill);
+                if (!result.success) {
+                    return { msg: `Card ${i + 1}: your correct answer doesn't compile/run.`, detail: result.compileError || result.stderr };
+                }
+                c.expectedOutput = result.stdout;
             }
-            c.expectedOutput = result.stdout;
         } else if (c.type === 'term_definition') {
             if (!c.term || !c.definition) {
                 return { msg: `Card ${i + 1}: needs both a term and a definition.` };

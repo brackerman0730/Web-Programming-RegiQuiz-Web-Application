@@ -13,6 +13,7 @@ const cardSchema = new mongoose.Schema({
     correctAnswerValue: Number,
 
     // code (question is reused as the prompt/description here too)
+    language: { type: String, enum: ['java', 'python', 'javascript', 'c', 'cpp', 'csharp', 'html'], default: 'java' },
     codeTemplate: String,
     correctFill: String,
     expectedOutput: String

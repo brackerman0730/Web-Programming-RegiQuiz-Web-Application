@@ -138,6 +138,80 @@ h3 {
     color: #000000;
 }
 
+/* Subject-category glyph on My Sets — colored from the active theme's accent
+   so it re-colors automatically when the Regi theme changes. */
+.set-category-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    color: var(--theme-accent);
+}
+.set-category-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* My Sets: one long horizontal "bubble" per set instead of a grid of square
+   cards. Icon on the left, details in the middle, actions stacked on the
+   right; stacks vertically on narrow screens. */
+.set-bubble {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: #fff;
+    border-radius: 28px;
+    padding: 1.1rem 1.5rem;
+}
+.set-bubble-icon {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--theme-body-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.set-bubble-icon .set-category-icon {
+    width: 30px;
+    height: 30px;
+}
+.set-bubble-main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.set-bubble-title {
+    color: #000000;
+}
+.set-bubble-actions {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 130px;
+}
+.set-bubble-actions .btn {
+    width: 100%;
+}
+
+@media (max-width: 576px) {
+    .set-bubble {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    .set-bubble-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+    .set-bubble-actions .btn {
+        width: auto;
+        flex: 1 1 auto;
+    }
+}
+
 /* Navbar reskinned as a dark plate with a glowing seam along the bottom */
 .navbar {
     background: linear-gradient(180deg, var(--theme-secondary-dark), var(--theme-secondary-darker)) !important;

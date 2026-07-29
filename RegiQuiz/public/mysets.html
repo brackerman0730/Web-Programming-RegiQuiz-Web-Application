@@ -85,7 +85,7 @@
             </div>
         </div>
 
-        <div class="row" id="setsRow"></div>
+        <div id="setsRow"></div>
     </div>
 
 
@@ -107,6 +107,72 @@
           .filter(function(c) { return c.type === "term_definition"; })
           .map(function(c) { return c.term + "\t" + c.definition; })
           .join("\n");
+  }
+
+  // Simple flat single-color glyphs (stroke="currentColor"), one per subject
+  // category, drawn in the same minimal style for visual consistency. Color
+  // comes from the theme's own --theme-accent variable via CSS, so the icon
+  // automatically re-colors when the Regi theme changes. Keys match the
+  // category <select> options exactly (here and in createset.html/editset.html).
+  const SET_CATEGORY_ICONS = {
+      "Other": `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7a1 1 0 0 1 1-1h4l2 2h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7z"/>
+          </svg>`,
+      "Computer Science": `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="12" rx="1.5"/>
+              <line x1="8" y1="20" x2="16" y2="20"/>
+              <line x1="12" y1="16" x2="12" y2="20"/>
+          </svg>`,
+      "Mathematics": `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="3" width="14" height="18" rx="2"/>
+              <line x1="8" y1="6.5" x2="16" y2="6.5"/>
+              <circle cx="8.5" cy="11" r="0.9" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="11" r="0.9" fill="currentColor" stroke="none"/>
+              <circle cx="15.5" cy="11" r="0.9" fill="currentColor" stroke="none"/>
+              <circle cx="8.5" cy="14.5" r="0.9" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="14.5" r="0.9" fill="currentColor" stroke="none"/>
+              <circle cx="15.5" cy="14.5" r="0.9" fill="currentColor" stroke="none"/>
+              <circle cx="8.5" cy="18" r="0.9" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="18" r="0.9" fill="currentColor" stroke="none"/>
+              <circle cx="15.5" cy="18" r="0.9" fill="currentColor" stroke="none"/>
+          </svg>`,
+      "Science": `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 3h6"/>
+              <path d="M10 3v6l-5.5 9.5A1 1 0 0 0 5.5 20h13a1 1 0 0 0 .87-1.5L14 9V3"/>
+              <line x1="7.5" y1="14" x2="16.5" y2="14"/>
+          </svg>`,
+      "Language": `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <path d="M12 3c2.5 2.5 4 5.8 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.8-4-9s1.5-6.5 4-9z"/>
+          </svg>`,
+      "English": `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5.5C10 4.1 6.5 3.8 4 4.6C3.4 4.8 3 5.2 3 5.8V17.8C3 18.3 3.4 18.6 4 18.4C6.5 17.6 10 17.9 12 19.3C14 17.9 17.5 17.6 20 18.4C20.6 18.6 21 18.3 21 17.8V5.8C21 5.2 20.6 4.8 20 4.6C17.5 3.8 14 4.1 12 5.5Z"/>
+              <path d="M12 5.5V19.3"/>
+          </svg>`,
+      "History": `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 3h12M6 21h12M6 3c0 4.5 4.5 6 6 9-1.5 3-6 4.5-6 9M18 3c0 4.5-4.5 6-6 9 1.5 3 6 4.5 6 9"/>
+          </svg>`,
+      "Engineering": `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <g transform="rotate(15 12 12)">
+                  <circle cx="12" cy="12" r="6.5"/>
+                  <circle cx="12" cy="12" r="2.8"/>
+                  <path d="M12 5.5V3.3M12 18.5V20.7M5.5 12H3.3M18.5 12H20.7M7.4 7.4L5.85 5.85M16.6 7.4L18.15 5.85M7.4 16.6L5.85 18.15M16.6 16.6L18.15 18.15"/>
+              </g>
+          </svg>`
+  };
+
+  function setCategoryIconHtml(set) {
+      let icon = SET_CATEGORY_ICONS[set.category] || SET_CATEGORY_ICONS["Other"];
+      return `<span class="set-category-icon" title="${set.category}">${icon}</span>`;
   }
 
   // A set's progress for the current user, or null if there's nothing to
@@ -197,63 +263,68 @@
         let exportableCount = (set.cards || []).filter(function(c) { return c.type === "term_definition"; }).length;
 
         output += `
-        <div class="col-md-6 col-lg-4 mb-4">
-          <div class="card shadow h-100">
-            <div class="card-body">
-              ${isGuest ? '' : `
-              <div class="form-check float-end">
-                  <input type="checkbox" class="form-check-input mergeCheckbox" data-set-id="${set._id}" ${selectedForMerge.includes(set._id) ? "checked" : ""}>
-                  <label class="form-check-label small">Select</label>
-              </div>
-              `}
-              <h3 class="card-title">${set.name}</h3>
-                <p><strong>ID:</strong> ${set._id}</p>
-                <p><strong>Category:</strong> ${set.category}</p>
-                <p><strong>Description:</strong> ${set.description}</p>
-                <p class="text-muted small mb-2">Created: ${created} &middot; Last edited: ${edited}</p>
-                ${progress === null ? '' : `
-                <div class="progress mb-1" style="height: 8px;">
-                    <div class="progress-bar bg-success" style="width: ${progress.masteredPct}%;"></div>
-                    <div class="progress-bar bg-warning" style="width: ${progress.inProgressPct}%;"></div>
-                </div>
-                <p class="text-muted small mb-2">${progress.sorted}/${progress.total} cards sorted</p>
-                `}
+        <div class="mb-3">
+          <div class="set-bubble shadow">
+              <div class="set-bubble-icon">${setCategoryIconHtml(set)}</div>
 
-                <a href="studyset.html?id=${set._id}" class="btn btn-success me-2">
-                  Study
-                </a>
+              <div class="set-bubble-main">
+                  <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                      <h3 class="set-bubble-title mb-0">${set.name}</h3>
+                      <span class="badge rounded-pill border text-dark bg-light">${set.category}</span>
+                      ${isGuest ? '' : `
+                      <div class="form-check ms-auto mb-0">
+                          <input type="checkbox" class="form-check-input mergeCheckbox" data-set-id="${set._id}" ${selectedForMerge.includes(set._id) ? "checked" : ""}>
+                          <label class="form-check-label small">Select</label>
+                      </div>
+                      `}
+                  </div>
+                  <p class="mb-1"><strong>Description:</strong> ${set.description}</p>
+                  <p class="text-muted small mb-2">Created: ${created} &middot; Last edited: ${edited}</p>
+                  ${progress === null ? '' : `
+                  <div class="progress mb-1" style="height: 8px;">
+                      <div class="progress-bar bg-success" style="width: ${progress.masteredPct}%;"></div>
+                      <div class="progress-bar bg-warning" style="width: ${progress.inProgressPct}%;"></div>
+                  </div>
+                  <p class="text-muted small mb-0">${progress.sorted}/${progress.total} cards sorted</p>
+                  `}
+              </div>
+
+              <div class="set-bubble-actions">
+                  <a href="studyset.html?id=${set._id}" class="btn btn-success btn-sm">
+                    Study
+                  </a>
         `;
 
         if (!isGuest) {
           output += `
-                <a href="editset.html?id=${set._id}" class="btn btn-primary me-2">
-                  Edit
-                </a>
+                  <a href="editset.html?id=${set._id}" class="btn btn-primary btn-sm">
+                    Edit
+                  </a>
 
-                <a href="/deleteset/${set._id}" class="btn btn-danger me-2" onclick="return deleteCheck();">
-                  Delete
-                </a>
+                  <a href="/deleteset/${set._id}" class="btn btn-danger btn-sm" onclick="return deleteCheck();">
+                    Delete
+                  </a>
           `;
         }
 
         output += `
-                <button type="button" class="btn btn-outline-secondary exportBtn" data-set-id="${set._id}">
-                  Export
-                </button>
-
-                <div class="mt-2 d-none exportArea" data-set-id="${set._id}">
-                    ${exportableCount === 0 ? `
-                    <p class="form-text mb-0">This set has no Term &amp; Definition cards to export.</p>
-                    ` : `
-                    <textarea class="form-control form-control-sm mb-1" rows="4" readonly>${exportText}</textarea>
-                    <button type="button" class="btn btn-sm btn-outline-primary copyExportBtn" data-set-id="${set._id}">Copy to Clipboard</button>
-                    <span class="form-text mb-0 copyStatus" data-set-id="${set._id}"></span>
-                    <p class="form-text mt-1 mb-0">Exported ${exportableCount} of ${(set.cards || []).length} cards &mdash; only Term &amp; Definition cards export, matching Quizlet's own format. Paste this into Quizlet's Import, or this app's Import Cards from Text.</p>
-                    `}
-                </div>
+                  <button type="button" class="btn btn-outline-secondary btn-sm exportBtn" data-set-id="${set._id}">
+                    Export
+                  </button>
               </div>
-            </div>
           </div>
+
+          <div class="mt-2 ms-2 d-none exportArea" data-set-id="${set._id}">
+              ${exportableCount === 0 ? `
+              <p class="form-text mb-0">This set has no Term &amp; Definition cards to export.</p>
+              ` : `
+              <textarea class="form-control form-control-sm mb-1" rows="4" readonly>${exportText}</textarea>
+              <button type="button" class="btn btn-sm btn-outline-primary copyExportBtn" data-set-id="${set._id}">Copy to Clipboard</button>
+              <span class="form-text mb-0 copyStatus" data-set-id="${set._id}"></span>
+              <p class="form-text mt-1 mb-0">Exported ${exportableCount} of ${(set.cards || []).length} cards &mdash; only Term &amp; Definition cards export, matching Quizlet's own format. Paste this into Quizlet's Import, or this app's Import Cards from Text.</p>
+              `}
+          </div>
+        </div>
         `;
       }
 

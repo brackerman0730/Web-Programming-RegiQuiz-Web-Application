@@ -54,6 +54,37 @@
             </select>
         </div>
 
+        <div id="mergePanel" class="card p-3 mb-3 d-none">
+            <h6 class="mb-2">Merge <span id="mergeCount">0</span> Selected Sets</h6>
+            <p class="form-text mt-0 mb-2">
+                Creates one new set containing every card from the sets checked below, in the order you checked them.
+            </p>
+            <div class="row g-2 mb-2">
+                <div class="col-12 col-sm-6">
+                    <label class="form-label small mb-1">New Set Name</label>
+                    <input type="text" class="form-control form-control-sm" id="mergeName">
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label class="form-label small mb-1">Category</label>
+                    <select class="form-select form-select-sm" id="mergeCategory">
+                        <option value="Other" selected>Other</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Science">Science</option>
+                        <option value="Language">Language</option>
+                        <option value="English">English</option>
+                        <option value="History">History</option>
+                        <option value="Engineering">Engineering</option>
+                    </select>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-primary btn-sm" id="mergeCreateBtn">Create Merged Set</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="mergeClearBtn">Clear Selection</button>
+                <span class="form-text mb-0" id="mergeStatus"></span>
+            </div>
+        </div>
+
         <div class="row" id="setsRow"></div>
     </div>
 
@@ -66,6 +97,17 @@
   let lstSets = [];
   let isGuest = true;
   let progressBySet = {}; // { setId: { mastered, inProgress } }, current user only
+  let selectedForMerge = []; // set ids, in the order they were checked
+
+  // Term/definition pairs only, tab-separated, one per line — matches
+  // Quizlet's own Export format exactly (and the defaults on this app's own
+  // Import Cards from Text panel), so the result pastes into either.
+  function buildExportText(set) {
+      return (set.cards || [])
+          .filter(function(c) { return c.type === "term_definition"; })
+          .map(function(c) { return c.term + "\t" + c.definition; })
+          .join("\n");
+  }
 
   // A set's progress for the current user, or null if there's nothing to
   // show (guest, or a set with no cards). masteredPct/inProgressPct drive a
@@ -144,21 +186,30 @@
       let output = "";
 
       for (let i = 0; i < lstSets.length; i++) {
-        let progress = setProgress(lstSets[i]);
-        let created = new Date(lstSets[i].creation).toLocaleDateString();
+        let set = lstSets[i];
+        let progress = setProgress(set);
+        let created = new Date(set.creation).toLocaleDateString();
         // Sets created before "last edited" tracking existed have no
         // updatedAt in the database yet (Mongoose defaults only apply to
         // newly-created documents) — fall back to the created date.
-        let edited = lstSets[i].updatedAt ? new Date(lstSets[i].updatedAt).toLocaleDateString() : created;
+        let edited = set.updatedAt ? new Date(set.updatedAt).toLocaleDateString() : created;
+        let exportText = buildExportText(set);
+        let exportableCount = (set.cards || []).filter(function(c) { return c.type === "term_definition"; }).length;
 
         output += `
         <div class="col-md-6 col-lg-4 mb-4">
           <div class="card shadow h-100">
             <div class="card-body">
-              <h3 class="card-title">${lstSets[i].name}</h3>
-                <p><strong>ID:</strong> ${lstSets[i]._id}</p>
-                <p><strong>Category:</strong> ${lstSets[i].category}</p>
-                <p><strong>Description:</strong> ${lstSets[i].description}</p>
+              ${isGuest ? '' : `
+              <div class="form-check float-end">
+                  <input type="checkbox" class="form-check-input mergeCheckbox" data-set-id="${set._id}" ${selectedForMerge.includes(set._id) ? "checked" : ""}>
+                  <label class="form-check-label small">Select</label>
+              </div>
+              `}
+              <h3 class="card-title">${set.name}</h3>
+                <p><strong>ID:</strong> ${set._id}</p>
+                <p><strong>Category:</strong> ${set.category}</p>
+                <p><strong>Description:</strong> ${set.description}</p>
                 <p class="text-muted small mb-2">Created: ${created} &middot; Last edited: ${edited}</p>
                 ${progress === null ? '' : `
                 <div class="progress mb-1" style="height: 8px;">
@@ -168,24 +219,38 @@
                 <p class="text-muted small mb-2">${progress.sorted}/${progress.total} cards sorted</p>
                 `}
 
-                <a href="studyset.html?id=${lstSets[i]._id}" class="btn btn-success me-2">
+                <a href="studyset.html?id=${set._id}" class="btn btn-success me-2">
                   Study
                 </a>
         `;
 
         if (!isGuest) {
           output += `
-                <a href="editset.html?id=${lstSets[i]._id}" class="btn btn-primary me-2">
+                <a href="editset.html?id=${set._id}" class="btn btn-primary me-2">
                   Edit
                 </a>
 
-                <a href="/deleteset/${lstSets[i]._id}" class="btn btn-danger" onclick="return deleteCheck();">
+                <a href="/deleteset/${set._id}" class="btn btn-danger me-2" onclick="return deleteCheck();">
                   Delete
                 </a>
           `;
         }
 
         output += `
+                <button type="button" class="btn btn-outline-secondary exportBtn" data-set-id="${set._id}">
+                  Export
+                </button>
+
+                <div class="mt-2 d-none exportArea" data-set-id="${set._id}">
+                    ${exportableCount === 0 ? `
+                    <p class="form-text mb-0">This set has no Term &amp; Definition cards to export.</p>
+                    ` : `
+                    <textarea class="form-control form-control-sm mb-1" rows="4" readonly>${exportText}</textarea>
+                    <button type="button" class="btn btn-sm btn-outline-primary copyExportBtn" data-set-id="${set._id}">Copy to Clipboard</button>
+                    <span class="form-text mb-0 copyStatus" data-set-id="${set._id}"></span>
+                    <p class="form-text mt-1 mb-0">Exported ${exportableCount} of ${(set.cards || []).length} cards &mdash; only Term &amp; Definition cards export, matching Quizlet's own format. Paste this into Quizlet's Import, or this app's Import Cards from Text.</p>
+                    `}
+                </div>
               </div>
             </div>
           </div>
@@ -202,6 +267,101 @@
     document.getElementById("sortSelect").addEventListener("change", function(event) {
         sortSets(event.target.value);
         renderSets();
+    });
+
+    // Export toggle/copy and merge checkboxes are all inside #setsRow, which
+    // gets fully rebuilt by renderSets() — a single delegated listener here
+    // keeps working across re-renders instead of needing to be rewired each time.
+    document.getElementById("setsRow").addEventListener("click", function(event) {
+        let exportBtn = event.target.closest(".exportBtn");
+        if (exportBtn) {
+            document.querySelector(`.exportArea[data-set-id="${exportBtn.dataset.setId}"]`).classList.toggle("d-none");
+            return;
+        }
+
+        let copyBtn = event.target.closest(".copyExportBtn");
+        if (copyBtn) {
+            let setId = copyBtn.dataset.setId;
+            let textarea = document.querySelector(`.exportArea[data-set-id="${setId}"] textarea`);
+            let status = document.querySelector(`.copyStatus[data-set-id="${setId}"]`);
+            navigator.clipboard.writeText(textarea.value).then(function() {
+                status.textContent = "Copied!";
+            }).catch(function() {
+                textarea.select();
+                status.textContent = "Couldn't copy automatically — text is selected, press Ctrl+C.";
+            });
+        }
+    });
+
+    document.getElementById("setsRow").addEventListener("change", function(event) {
+        let checkbox = event.target.closest(".mergeCheckbox");
+        if (!checkbox) return;
+
+        let setId = checkbox.dataset.setId;
+        if (checkbox.checked) {
+            if (!selectedForMerge.includes(setId)) selectedForMerge.push(setId);
+        } else {
+            selectedForMerge = selectedForMerge.filter(function(id) { return id !== setId; });
+        }
+
+        updateMergePanel();
+    });
+
+    function updateMergePanel() {
+        document.getElementById("mergeCount").textContent = selectedForMerge.length;
+        document.getElementById("mergePanel").classList.toggle("d-none", selectedForMerge.length < 2);
+    }
+
+    document.getElementById("mergeClearBtn").addEventListener("click", function() {
+        selectedForMerge = [];
+        updateMergePanel();
+        renderSets();
+    });
+
+    document.getElementById("mergeCreateBtn").addEventListener("click", async function() {
+        let name = document.getElementById("mergeName").value.trim();
+        let status = document.getElementById("mergeStatus");
+
+        if (!name) {
+            status.textContent = "Enter a name for the merged set.";
+            return;
+        }
+
+        // Concatenate each selected set's cards, in their own original
+        // order, in the order the sets themselves were checked. Strip _id
+        // (let Mongo assign fresh ones) and group (the merged set has no
+        // group definitions of its own, so a leftover group name would just
+        // be a dangling reference in the editor).
+        let mergedCards = selectedForMerge.flatMap(function(setId) {
+            let set = lstSets.find(function(s) { return s._id === setId; });
+            return (set.cards || []).map(function(card) {
+                let copy = Object.assign({}, card);
+                delete copy._id;
+                copy.group = "";
+                return copy;
+            });
+        });
+
+        let response = await fetch('/sets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                txt_name: name,
+                txt_category: document.getElementById("mergeCategory").value,
+                txt_description: "Merged from: " + selectedForMerge.map(function(id) {
+                    return lstSets.find(function(s) { return s._id === id; }).name;
+                }).join(", "),
+                cards: mergedCards
+            })
+        });
+
+        if (response.ok) {
+            let data = await response.json();
+            window.location.href = "editset.html?id=" + data._id;
+        } else {
+            let data = await response.json();
+            status.textContent = data.msg + (data.detail ? " (" + data.detail + ")" : "");
+        }
     });
 
     readSetData();

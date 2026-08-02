@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="RegiQuiz">
+  <rect width="512" height="512" fill="#0E2246"/>
+  <g fill="#4FD1FF">
+    <circle cx="356.4" cy="194.7" r="37.0"/>
+    <circle cx="263.1" cy="101.4" r="37.0"/>
+    <circle cx="135.6" cy="135.6" r="37.0"/>
+    <circle cx="101.4" cy="263.1" r="37.0"/>
+    <circle cx="194.7" cy="356.4" r="37.0"/>
+    <circle cx="322.3" cy="322.3" r="37.0"/>
+    <circle cx="415.6" cy="415.6" r="32.0"/>
+  </g>
+</svg>
